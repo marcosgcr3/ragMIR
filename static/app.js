@@ -291,14 +291,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (res.ok) {
                 sessions = sessions.filter(s => s.id !== id);
+                renderSessionsList();
                 if (sessions.length === 0) {
                     await createNewSession();
                 } else {
                     if (currentSessionId === id) {
                         currentSessionId = sessions[0].id;
                         await loadCurrentSessionMessages();
-                    } else {
-                        renderSessionsList();
                     }
                 }
             }
