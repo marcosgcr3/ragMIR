@@ -7,7 +7,7 @@ load_dotenv()
 
 # Workspace paths
 BASE_DIR = Path(__file__).resolve().parent
-DEFAULT_DB_PATH = BASE_DIR / os.environ.get("DB_PATH", "rag_store.db")
+DEFAULT_DB_PATH = BASE_DIR / "db" / os.environ.get("DB_PATH", "rag_store.db")
 
 # Qdrant Configuration
 QDRANT_URL = os.environ.get("QDRANT_URL")
