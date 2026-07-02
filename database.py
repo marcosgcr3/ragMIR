@@ -152,7 +152,8 @@ def get_user_sessions(db_path: Path, user_id: int) -> List[Dict[str, Any]]:
 def create_user_session(db_path: Path, user_id: int, session_id: str, title: str) -> Dict[str, Any]:
     with get_db_connection(db_path) as conn:
         conn.execute(
-            "INSERT INTO chat_sessions (id, user_id, title) VALUES (?, ?, ?)",
+            "INSERT INTO chat_sessions (id, user_id, title) VALUES (?, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET title = excluded.title",
             (session_id, user_id, title)
         )
         conn.commit()
