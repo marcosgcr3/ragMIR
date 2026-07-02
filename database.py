@@ -158,7 +158,7 @@ def init_db(db_path: Path) -> None:
         cur = conn.cursor()
         cur.execute("SELECT COUNT(*) FROM question_pool")
         q_count = cur.fetchone()[0]
-        if q_count < 100:
+        if q_count < 1200:
             conn.execute("DELETE FROM question_pool")
             seed_file = Path(__file__).parent / "static" / "official_questions_seed.json"
             if seed_file.exists():
