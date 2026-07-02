@@ -158,7 +158,8 @@ def init_db(db_path: Path) -> None:
         cur = conn.cursor()
         cur.execute("SELECT COUNT(*) FROM question_pool")
         q_count = cur.fetchone()[0]
-        if q_count == 0:
+        if q_count < 100:
+            conn.execute("DELETE FROM question_pool")
             seed_file = Path(__file__).parent / "static" / "official_questions_seed.json"
             if seed_file.exists():
                 try:
@@ -393,7 +394,8 @@ def get_pool_questions(db_path: Path, user_id: int, subject: str, difficulty: st
         for row in cur.fetchall():
             q = dict(row)
             try:
-                q["options"] = json.loads(q["options"])
+                opts = json.loads(q["options"])
+                q["options"] = [opt for opt in opts if opt is not None]
             except Exception:
                 q["options"] = []
             questions.append(q)
