@@ -375,7 +375,8 @@ body {
     padding: 0 40px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 20px;
     border-bottom: 1px solid var(--border-color);
     background: rgba(8, 9, 14, 0.5);
     backdrop-filter: blur(10px);
@@ -1621,4 +1622,139 @@ body {
 .nav-banner-btn.nav-chat.nav-active    { background: rgba(0,242,254,0.12); border-color: rgba(0,242,254,0.35); color: #00f2fe; box-shadow: 0 0 14px rgba(0,242,254,0.1); }
 .nav-banner-btn.nav-sim.nav-active     { background: rgba(79,172,254,0.15); border-color: rgba(79,172,254,0.35); color: #4facfe; box-shadow: 0 0 14px rgba(79,172,254,0.1); }
 .nav-banner-btn.nav-diag.nav-active    { background: rgba(168,85,247,0.18); border-color: rgba(168,85,247,0.4);  color: #c084fc; box-shadow: 0 0 14px rgba(168,85,247,0.15); }
+
+/* ── Mobile Hamburger Button ──────────────────────────────────────────────── */
+.hamburger-btn {
+    display: none;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1rem;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.hamburger-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+
+/* ── Sidebar Overlay (mobile) ─────────────────────────────────────────────── */
+.sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(3px);
+    z-index: 999;
+}
+.sidebar-overlay.visible { display: block; }
+
+/* ── Mobile Bottom Tab Bar ────────────────────────────────────────────────── */
+.mobile-tab-bar {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: rgba(10, 11, 18, 0.97);
+    border-top: 1px solid var(--border-color);
+    backdrop-filter: blur(16px);
+    z-index: 998;
+    padding: 0 8px;
+    padding-bottom: env(safe-area-inset-bottom, 0px); /* iPhone notch */
+}
+
+.mobile-tab {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px; height: 100%;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.6rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+.mobile-tab i { font-size: 1.2rem; }
+.mobile-tab:hover { color: var(--text-secondary); }
+.mobile-tab.nav-chat.nav-active  { color: #00f2fe; }
+.mobile-tab.nav-sim.nav-active   { color: #4facfe; }
+.mobile-tab.nav-diag.nav-active  { color: #c084fc; }
+
+/* ── Responsive Breakpoint: ≤ 768px ──────────────────────────────────────── */
+@media (max-width: 768px) {
+
+    body { overflow: hidden; }
+
+    /* Sidebar becomes a fixed overlay drawer */
+    .sidebar {
+        position: fixed;
+        top: 0; left: 0;
+        height: 100vh;
+        width: 300px;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        overflow-y: auto;
+    }
+    .sidebar.mobile-open { transform: translateX(0); }
+
+    /* Nav banner inside the drawer stays full-width at top */
+    .nav-banner {
+        height: 60px;
+        margin: -24px -24px 20px -24px;
+    }
+
+    /* Main area fills full width */
+    .chat-area { width: 100vw; }
+
+    /* Header: smaller, show hamburger */
+    .chat-header {
+        height: 60px;
+        padding: 0 16px;
+        gap: 12px;
+    }
+    .header-info h1 { font-size: 15px; }
+    .header-info p  { display: none; }
+
+    .hamburger-btn { display: flex; }
+
+    /* Messages area: add bottom padding for tab bar */
+    .messages-container { padding-bottom: 80px !important; }
+
+    /* Chat input: stay above tab bar */
+    .chat-input-area,
+    .input-wrapper,
+    .chat-input-container {
+        padding-bottom: calc(64px + env(safe-area-inset-bottom, 8px)) !important;
+    }
+
+    /* Panels: reduce padding */
+    .panel { padding: 12px; margin-bottom: 14px; }
+
+    /* Show bottom tab bar */
+    .mobile-tab-bar { display: flex; }
+
+    /* Hide sidebar's own nav banner on mobile (bottom tab handles it) */
+    /* Keep it visible inside the drawer though */
+
+    /* Quick tips and welcome banner on mobile */
+    .welcome-banner { padding: 24px 16px; }
+    .quick-tips { flex-direction: column; gap: 8px; }
+
+    /* Test question adjustments */
+    .question-box { padding: 16px; }
+    .options-container { padding: 0 16px 16px; }
+
+    /* Login card */
+    .login-card { width: 90vw; padding: 28px 20px; }
+}
+
+/* ── Extra small phones: ≤ 400px ─────────────────────────────────────────── */
+@media (max-width: 400px) {
+    .sidebar { width: 280px; }
+    .chat-header { padding: 0 12px; }
+    .header-info h1 { font-size: 13px; }
+    .mobile-tab { font-size: 0.55rem; }
+    .mobile-tab i { font-size: 1.1rem; }
+}
+
 
