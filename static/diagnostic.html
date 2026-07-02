@@ -231,15 +231,7 @@
 
     <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo-icon"><img src="/static/logo.png" alt="RAG MIR Logo" class="logo-image"></div>
-            <div class="logo-title">
-                <h2>RAG MIR</h2>
-                <span>Diagnóstico de Nivel</span>
-            </div>
-        </div>
-
-        <!-- Navigation banner -->
+        <!-- Navigation banner ─ full width at top -->
         <nav class="nav-banner">
             <a href="/" class="nav-banner-btn nav-chat">
                 <i class="fa-solid fa-comments"></i>
@@ -255,15 +247,20 @@
             </a>
         </nav>
 
-        <!-- User profile -->
+        <div class="sidebar-header">
+            <div class="logo-icon"><img src="/static/logo.png" alt="RAG MIR Logo" class="logo-image"></div>
+            <div class="logo-title">
+                <h2>RAG MIR</h2>
+                <span>Diagnóstico de Nivel</span>
+            </div>
+        </div>
+
         <div class="user-profile" id="user-profile">
             <div class="user-info">
                 <i class="fa-solid fa-circle-user"></i>
                 <span id="user-display-name">Usuario</span>
             </div>
             <div class="user-actions">
-                <a href="/" class="btn-user-action" title="Chat IA"><i class="fa-solid fa-comments"></i></a>
-                <a href="/test" class="btn-user-action" title="Simulador"><i class="fa-solid fa-graduation-cap"></i></a>
                 <button class="btn-user-action btn-logout" id="btn-logout" title="Cerrar Sesión">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>

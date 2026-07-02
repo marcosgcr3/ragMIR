@@ -16,15 +16,7 @@
     <div class="app-container">
         <!-- Sidebar controls for Test configurations -->
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-icon"><img src="/static/logo.png" alt="RAG MIR Logo" class="logo-image"></div>
-                <div class="logo-title">
-                    <h2>RAG MIR</h2>
-                    <span>Simulador de Tests</span>
-                </div>
-            </div>
-
-            <!-- Navigation banner -->
+            <!-- Navigation banner ─ full width at top -->
             <nav class="nav-banner">
                 <a href="/" class="nav-banner-btn nav-chat">
                     <i class="fa-solid fa-comments"></i>
@@ -40,6 +32,14 @@
                 </a>
             </nav>
 
+            <div class="sidebar-header">
+                <div class="logo-icon"><img src="/static/logo.png" alt="RAG MIR Logo" class="logo-image"></div>
+                <div class="logo-title">
+                    <h2>RAG MIR</h2>
+                    <span>Simulador de Tests</span>
+                </div>
+            </div>
+
             <!-- User profile -->
             <div class="user-profile" id="user-profile">
                 <div class="user-info">
@@ -47,12 +47,6 @@
                     <span id="user-display-name">Usuario</span>
                 </div>
                 <div class="user-actions">
-                    <a href="/" class="btn-user-action" title="Volver al Chat">
-                        <i class="fa-solid fa-comments"></i>
-                    </a>
-                    <a href="/diagnostic" class="btn-user-action" title="Test de Diagnóstico" style="background:rgba(124,58,237,0.15);color:#a855f7">
-                        <i class="fa-solid fa-brain"></i>
-                    </a>
                     <button class="btn-user-action btn-logout" id="btn-logout" title="Cerrar Sesión">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
