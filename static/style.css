@@ -1561,3 +1561,58 @@ body {
     gap: 10px;
     color: var(--text-muted);
 }
+
+/* ── Sidebar Navigation Banner ──────────────────────────────────────────── */
+.nav-banner {
+    display: flex;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 6px;
+    margin-bottom: 20px;
+}
+
+.nav-banner-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-family: var(--font-body);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.nav-banner-btn i {
+    font-size: 1rem;
+    margin-bottom: 1px;
+}
+
+.nav-banner-btn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.nav-banner-btn.nav-active {
+    background: rgba(140, 82, 255, 0.18);
+    border-color: rgba(140, 82, 255, 0.4);
+    color: #c084fc;
+    box-shadow: 0 0 14px rgba(140, 82, 255, 0.15);
+}
+
+.nav-banner-btn.nav-chat.nav-active    { background: rgba(0,242,254,0.12); border-color: rgba(0,242,254,0.35); color: #00f2fe; box-shadow: 0 0 14px rgba(0,242,254,0.1); }
+.nav-banner-btn.nav-sim.nav-active     { background: rgba(79,172,254,0.15); border-color: rgba(79,172,254,0.35); color: #4facfe; box-shadow: 0 0 14px rgba(79,172,254,0.1); }
+.nav-banner-btn.nav-diag.nav-active    { background: rgba(168,85,247,0.18); border-color: rgba(168,85,247,0.4);  color: #c084fc; box-shadow: 0 0 14px rgba(168,85,247,0.15); }
+
