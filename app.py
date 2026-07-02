@@ -571,6 +571,96 @@ async def read_diagnostic(response: Response):
         raise HTTPException(status_code=404, detail="diagnostic.html no encontrado.")
     return diag_file.read_text(encoding="utf-8")
 
+@app.post("/api/diagnostic/mock-seed")
+async def seed_mock_diagnostic_data(user: dict = Depends(get_current_user)):
+    """Seed mock diagnostic history for the logged-in user to show statistics."""
+    db_path = config.DEFAULT_DB_PATH
+    import uuid as _uuid
+    import random
+    from datetime import datetime, timedelta
+    
+    with database.get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        # Clear existing mock diagnostic sessions to prevent duplication
+        conn.execute("""
+            DELETE FROM diagnostic_answers 
+            WHERE session_id IN (SELECT id FROM diagnostic_sessions WHERE user_id = ?)
+        """, (user["id"],))
+        conn.execute("DELETE FROM diagnostic_sessions WHERE user_id = ?", (user["id"],))
+        
+        # Get questions
+        cur.execute("SELECT id, subject FROM question_pool")
+        questions = [dict(r) for r in cur.fetchall()]
+        if not questions:
+            raise HTTPException(status_code=400, detail="No hay preguntas en question_pool.")
+        
+        questions_by_sub = {}
+        for q in questions:
+            sub = q["subject"]
+            if sub not in questions_by_sub:
+                questions_by_sub[sub] = []
+            questions_by_sub[sub].append(q["id"])
+            
+        subjects = list(questions_by_sub.keys())
+        
+        session_configs = [
+            {"days_ago": 5, "score": 2.8, "correct": 22, "incorrect": 24, "skipped": 4},
+            {"days_ago": 3, "score": 4.9, "correct": 31, "incorrect": 15, "skipped": 4},
+            {"days_ago": 1, "score": 6.8, "correct": 38, "incorrect": 9, "skipped": 3},
+            {"days_ago": 0, "score": 8.1, "correct": 43, "incorrect": 5, "skipped": 2},
+        ]
+        
+        for idx, config_data in enumerate(session_configs):
+            sess_id = f"mock-sess-{idx}-{_uuid.uuid4().hex[:8]}"
+            date_str = (datetime.utcnow() - timedelta(days=config_data["days_ago"])).strftime("%Y-%m-%d %H:%M:%S")
+            
+            conn.execute("""
+                INSERT INTO diagnostic_sessions (id, user_id, total_questions, correct_answers, incorrect_answers, skipped_answers, mir_score, completed, created_at)
+                VALUES (?, ?, 50, ?, ?, ?, ?, 1, ?)
+            """, (sess_id, user["id"], config_data["correct"], config_data["incorrect"], config_data["skipped"], config_data["score"], date_str))
+            
+            selected_questions = []
+            for sub in subjects:
+                sub_q_ids = questions_by_sub[sub]
+                sample_size = min(len(sub_q_ids), 4)
+                sampled = random.sample(sub_q_ids, sample_size)
+                for qid in sampled:
+                    selected_questions.append((qid, sub))
+            
+            while len(selected_questions) < 50:
+                sub = random.choice(subjects)
+                selected_questions.append((random.choice(questions_by_sub[sub]), sub))
+            selected_questions = selected_questions[:50]
+            
+            correct_count = config_data["correct"]
+            incorrect_count = config_data["incorrect"]
+            skipped_count = config_data["skipped"]
+            
+            for qid, sub in selected_questions:
+                if skipped_count > 0 and random.random() < 0.08:
+                    is_correct = 0
+                    sel_idx = -1
+                    skipped_count -= 1
+                elif correct_count > 0 and (sub in ["CD.pdf", "NR.pdf"] or (correct_count > incorrect_count and sub not in ["GT.pdf", "PD.pdf"])):
+                    is_correct = 1
+                    sel_idx = 1
+                    correct_count -= 1
+                elif incorrect_count > 0:
+                    is_correct = 0
+                    sel_idx = 2
+                    incorrect_count -= 1
+                else:
+                    is_correct = 1
+                    sel_idx = 1
+                
+                conn.execute("""
+                    INSERT INTO diagnostic_answers (session_id, question_id, selected_index, is_correct, created_at)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (sess_id, qid, sel_idx, is_correct, date_str))
+                
+        conn.commit()
+    return {"status": "success", "message": "Datos de simulacro creados correctamente."}
+
 @app.post("/api/diagnostic/start")
 async def start_diagnostic(user: dict = Depends(get_current_user)):
     """Start a new diagnostic session with 50 adaptive questions."""
