@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIR Test Simulator - RAG Inteligente</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar controls for Test configurations -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon"><img src="/static/logo.png" alt="RAG MIR Logo" class="logo-image"></div>
+                <div class="logo-title">
+                    <h2>RAG MIR</h2>
+                    <span>Simulador de Tests</span>
+                </div>
+            </div>
+
+            <!-- User profile -->
+            <div class="user-profile" id="user-profile">
+                <div class="user-info">
+                    <i class="fa-solid fa-circle-user"></i>
+                    <span id="user-display-name">Usuario</span>
+                </div>
+                <div class="user-actions">
+                    <a href="/" class="btn-user-action" title="Volver al Chat">
+                        <i class="fa-solid fa-comments"></i>
+                    </a>
+                    <button class="btn-user-action btn-logout" id="btn-logout" title="Cerrar Sesión">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Test Configurator Panel -->
+            <div class="panel config-panel" id="config-panel-card">
+                <h3><i class="fa-solid fa-sliders"></i> Configurar Examen</h3>
+                <form id="test-config-form">
+                    <div class="form-group">
+                        <label for="test-subject">Materia / Asignatura</label>
+                        <select id="test-subject" required>
+                            <option value="All">Aleatorio (Todas las materias)</option>
+                            <!-- Loaded dynamically from status files list -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad de Preguntas</label>
+                        <div class="test-size-selector">
+                            <input type="radio" id="size-5" name="test-size" value="5" checked>
+                            <label for="size-5">5</label>
+
+                            <input type="radio" id="size-10" name="test-size" value="10">
+                            <label for="size-10">10</label>
+
+                            <input type="radio" id="size-20" name="test-size" value="20">
+                            <label for="size-20">20</label>
+
+                            <input type="radio" id="size-50" name="test-size" value="50">
+                            <label for="size-50">50</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="btn-start-test">
+                        <i class="fa-solid fa-play"></i> Iniciar Simulador
+                    </button>
+                </form>
+            </div>
+
+            <!-- Subject Performance Scoreboard -->
+            <div class="panel stats-panel" id="stats-panel-card">
+                <h3><i class="fa-solid fa-chart-line"></i> Tu Rendimiento</h3>
+                <div class="stats-kpis">
+                    <div class="kpi-card">
+                        <span class="kpi-val" id="stats-pct">0%</span>
+                        <span class="kpi-label">Aciertos</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-val" id="stats-total">0</span>
+                        <span class="kpi-label">Contestadas</span>
+                    </div>
+                </div>
+                
+                <h4 style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; font-weight:600;">Desglose por Materia</h4>
+                <div class="subject-progress-container" id="subject-progress-list">
+                    <!-- Rendered dynamically -->
+                    <p class="empty-list" style="font-size:11px;">Aún no has respondido preguntas de test.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Test Area -->
+        <main class="chat-area" id="test-main-area">
+            <!-- Header -->
+            <header class="chat-header">
+                <div class="header-info">
+                    <h1>Simulador de Examen MIR</h1>
+                    <p>La IA generará preguntas de nivel MIR a partir de la base de conocimientos médica compartida.</p>
+                </div>
+            </header>
+
+            <!-- Test Content Body -->
+            <div class="messages-container" id="test-content-container">
+                
+                <!-- Welcome/Landing State -->
+                <div class="welcome-banner" id="test-welcome-state">
+                    <div class="banner-icon"><i class="fa-solid fa-clipboard-question"></i></div>
+                    <h2>¿Listo para poner a prueba tus conocimientos?</h2>
+                    <p>Configura tu test en la barra lateral seleccionando una asignatura específica o un examen aleatorio general. La IA redactará preguntas médicas reales y detallará los motivos de cada acierto o fallo.</p>
+                    <div class="quick-tips">
+                        <div class="tip-card">
+                            <i class="fa-solid fa-filter"></i>
+                            <span>Filtro por asignatura</span>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Corrección interactiva</span>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fa-solid fa-book-medical"></i>
+                            <span>Justificación explicada</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Test Question State -->
+                <div class="test-question-card" id="test-active-state" style="display: none;">
+                    <div class="test-progress-bar">
+                        <span class="progress-label" id="test-progress-text">Pregunta 1 de 10</span>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="test-progress-fill" style="width: 10%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="question-box">
+                        <span class="question-subject-badge" id="active-question-subject">Cardiología</span>
+                        <h2 class="question-text" id="active-question-text">¿Cuál es el tratamiento inicial de elección en un paciente con taquicardia supraventricular estable?</h2>
+                    </div>
+
+                    <div class="options-container" id="active-options-list">
+                        <!-- Loaded dynamically -->
+                    </div>
+
+                    <!-- Answer Justification Card (Hidden until answered) -->
+                    <div class="explanation-card" id="active-explanation-card" style="display: none;">
+                        <div class="explanation-header">
+                            <h3><i class="fa-solid fa-notes-medical"></i> Justificación Médica</h3>
+                            <span class="explanation-source" id="active-explanation-source">Manual: CD.pdf | Página 12</span>
+                        </div>
+                        <p class="explanation-text" id="active-explanation-text">El tratamiento inicial de elección son las maniobras vagales. Si no son efectivas, se procede a la administración rápida de adenosina por vía intravenosa...</p>
+                        <button class="btn btn-primary" id="btn-next-question" style="margin-top: 15px; float: right;">
+                            Siguiente Pregunta <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Finished Test State -->
+                <div class="welcome-banner" id="test-finished-state" style="display: none;">
+                    <div class="banner-icon" style="background: var(--accent-grad); box-shadow: var(--shadow-glow);"><i class="fa-solid fa-trophy"></i></div>
+                    <h2 id="finished-title">¡Simulacro Completado!</h2>
+                    <p id="finished-score-text">Has respondido correctamente 8 de 10 preguntas (80% de aciertos).</p>
+                    <button class="btn btn-primary" id="btn-restart-simulator" style="margin-top: 20px;">
+                        <i class="fa-solid fa-rotate-right"></i> Nuevo Examen
+                    </button>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="login-overlay" style="display: none;">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="/static/logo.png" alt="RAG MIR Logo">
+            </div>
+            <h2>RAG MIR</h2>
+            <p>Ingresa para acceder al Simulador de Tests MIR</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Usuario</label>
+                    <select id="login-username" required>
+                        <option value="" disabled selected>Selecciona tu usuario</option>
+                        <option value="Marcos">Marcos</option>
+                        <option value="Elsa">Elsa</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Contraseña</label>
+                    <input type="password" id="login-password" placeholder="Tu contraseña" required>
+                </div>
+                <div class="login-error" id="login-error" style="display: none;">Contraseña incorrecta</div>
+                <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+            </form>
+        </div>
+    </div>
+</body>
+<script src="/static/test_app.js?v=1"></script>
+</html>

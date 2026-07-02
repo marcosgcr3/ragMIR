@@ -9,14 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const userProfile = document.getElementById('user-profile');
     const userDisplayName = document.getElementById('user-display-name');
     const btnLogout = document.getElementById('btn-logout');
-    const btnShowStats = document.getElementById('btn-show-stats');
-    
-    const statsModal = document.getElementById('stats-modal');
-    const btnCloseStats = document.getElementById('btn-close-stats');
-    const kpiQueries = document.getElementById('kpi-queries');
-    const kpiTokens = document.getElementById('kpi-tokens');
-    const kpiDays = document.getElementById('kpi-days');
-    const statsChartBars = document.getElementById('stats-chart-bars');
 
     // DOM Elements - Core Chat
     const chatMessages = document.getElementById('chat-messages');
@@ -170,67 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Statistics Modal Handlers
-    btnShowStats.addEventListener('click', async () => {
-        try {
-            const res = await fetch('/api/stats');
-            if (!res.ok) throw new Error("Could not retrieve stats.");
-            
-            const stats = await res.json();
-            
-            // Populate metrics
-            kpiQueries.textContent = stats.total_queries;
-            kpiTokens.textContent = stats.total_tokens.toLocaleString();
-            kpiDays.textContent = stats.active_days;
-            
-            // Render chart
-            statsChartBars.innerHTML = '';
-            const dayData = stats.queries_by_day || [];
-            
-            if (dayData.length === 0) {
-                statsChartBars.innerHTML = '<p class="empty-chart">Aún no hay actividad registrada.</p>';
-            } else {
-                const maxCount = Math.max(...dayData.map(d => d.count), 1);
-                
-                dayData.forEach(d => {
-                    // Date formatting (e.g. "2026-07-02" -> "02/07")
-                    let label = d.date;
-                    try {
-                        const parts = d.date.split('-');
-                        if (parts.length === 3) {
-                            label = `${parts[2]}/${parts[1]}`;
-                        }
-                    } catch (e) {}
-                    
-                    const heightPercent = (d.count / maxCount) * 100;
-                    
-                    const barWrapper = document.createElement('div');
-                    barWrapper.className = 'bar-wrapper';
-                    barWrapper.innerHTML = `
-                        <span class="bar-count">${d.count}</span>
-                        <div class="bar-fill" style="height: ${heightPercent}%"></div>
-                        <span class="bar-label">${label}</span>
-                    `;
-                    statsChartBars.appendChild(barWrapper);
-                });
-            }
-            
-            statsModal.style.display = 'flex';
-        } catch (err) {
-            alert("Error al cargar las estadísticas: " + err.message);
-        }
-    });
 
-    btnCloseStats.addEventListener('click', () => {
-        statsModal.style.display = 'none';
-    });
-
-    // Close modal on background click
-    statsModal.addEventListener('click', (e) => {
-        if (e.target === statsModal) {
-            statsModal.style.display = 'none';
-        }
-    });
 
     // Server-side Session Management
     async function loadSessions() {

@@ -57,3 +57,42 @@ def get_deepseek_key_or_warn():
         print("="*60 + "\n")
     return key
 
+
+# Medical specialty mapping for manual files
+MANUAL_NAMES = {
+    "AL.pdf": "Alergología",
+    "AN.pdf": "Anestesiología",
+    "AP.pdf": "Anatomía Patológica",
+    "AT.pdf": "Atención Primaria / Pediatría",
+    "BL.pdf": "Bioestadística",
+    "BQ.pdf": "Bioquímica",
+    "CD.pdf": "Cardiología y Cirugía Cardiovascular",
+    "CG.pdf": "Cirugía General",
+    "DG.pdf": "Digestivo",
+    "DM.pdf": "Dermatología",
+    "ED.pdf": "Endocrinología",
+    "EP.pdf": "Epidemiología",
+    "FC.pdf": "Farmacología",
+    "FM.pdf": "Fisiología",
+    "FS.pdf": "Psiquiatría",
+    "GC.pdf": "Ginecología y Obstetricia",
+    "GR.pdf": "Geriatría",
+    "GT.pdf": "Genética",
+    "HM.pdf": "Hematología",
+    "IF.pdf": "Infecciosas",
+    "IG.pdf": "Inmunología",
+    "NF.pdf": "Nefrología",
+    "NM.pdf": "Neumología",
+    "NR.pdf": "Neurología",
+    "OF.pdf": "Oftalmología",
+    "ON.pdf": "Oncología",
+    "OR.pdf": "Otorrinolaringología",
+    "PD.pdf": "Pediatría",
+    "PQ.pdf": "Psicología/Psiquiatría",
+    "RH.pdf": "Reumatología",
+    "RM.pdf": "Rehabilitación",
+    "RX.pdf": "Radiología",
+    "TM.pdf": "Traumatología",
+    "UG.pdf": "Urología",
+    "UR.pdf": "Urgencias"
+}

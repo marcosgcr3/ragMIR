@@ -3,12 +3,14 @@ import io
 import json
 import shutil
 import base64
+import random
 import urllib3
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, File, UploadFile, Form, BackgroundTasks, HTTPException, Depends, Request, Cookie
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from google.genai import types
 
 import config
 import vector_store
@@ -47,6 +49,13 @@ async def read_root():
     if not index_file.exists():
          raise HTTPException(status_code=404, detail="Frontend index.html no encontrado.")
     return index_file.read_text(encoding="utf-8")
+
+@app.get("/test", response_class=HTMLResponse)
+async def read_test_root():
+    test_file = STATIC_DIR / "test.html"
+    if not test_file.exists():
+         raise HTTPException(status_code=404, detail="Frontend test.html no encontrado.")
+    return test_file.read_text(encoding="utf-8")
 
 # --- AUTH ENPOINTS ---
 @app.post("/api/auth/login")
@@ -124,6 +133,7 @@ async def get_status(user: dict = Depends(get_current_user)):
             for filename, info in status["files"].items():
                 files_list.append({
                     "name": filename,
+                    "readable_name": config.MANUAL_NAMES.get(filename, filename.replace(".pdf", "")),
                     "chunks": info.get("chunk_count", 0)
                 })
         return {
@@ -154,7 +164,6 @@ async def post_query(
         image_base64_str = None
         if image and image.filename:
             image_bytes = await image.read()
-            # Convert image to base64 to store in messages
             mime = image.content_type or "image/png"
             image_base64_str = f"data:{mime};base64,{base64.b64encode(image_bytes).decode('utf-8')}"
             
@@ -173,7 +182,6 @@ async def post_query(
             history=history_list
         )
         
-        # Format sources
         sources = []
         seen = set()
         for src in result.get("sources", []):
@@ -186,7 +194,6 @@ async def post_query(
                 })
                 seen.add(src_key)
                 
-        # Save messages to Relational Database
         database.add_session_message(
             config.DEFAULT_DB_PATH, 
             session_id, 
@@ -203,7 +210,6 @@ async def post_query(
             sources
         )
         
-        # Log Usage stats
         tokens = result.get("usage", {}).get("total_tokens", 0) if result.get("usage") else 0
         database.log_usage(
             config.DEFAULT_DB_PATH, 
@@ -304,17 +310,129 @@ async def delete_document(filename: str, user: dict = Depends(get_current_user))
             content={"error": f"Error al eliminar documento: {str(e)}"}
         )
 
-@app.get("/api/stats")
-async def get_stats(user: dict = Depends(get_current_user)):
-    """Get the usage stats for the authenticated user."""
+# --- TEST SIMULATOR ENDPOINTS ---
+@app.post("/api/tests/session")
+async def start_test_session(
+    test_id: str = Form(...),
+    subject: str = Form(...),
+    total_questions: int = Form(...),
+    user: dict = Depends(get_current_user)
+):
+    """Start a new test session in the database."""
     try:
-        stats = database.get_user_stats(config.DEFAULT_DB_PATH, user["id"])
+        database.create_test_session(config.DEFAULT_DB_PATH, user["id"], test_id, subject, total_questions)
+        return {"message": "Sesión de test iniciada con éxito."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al iniciar sesión de test: {str(e)}")
+
+@app.post("/api/tests/generate-question")
+async def generate_test_question(subject: str = Form(...), user: dict = Depends(get_current_user)):
+    """Generate a multiple-choice question from Gemini based on indexed manuals."""
+    client = vector_store.get_client()
+    collection = config.QDRANT_COLLECTION
+    
+    # 1. Fetch a random chunk from Qdrant
+    filter_obj = None
+    if subject != "All":
+        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        filter_obj = Filter(
+            must=[FieldCondition(key="source", match=MatchValue(value=subject))]
+        )
+        
+    try:
+        results, _ = client.scroll(
+            collection_name=collection,
+            scroll_filter=filter_obj,
+            limit=100,
+            with_payload=True,
+            with_vectors=False
+        )
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Error al consultar la base de datos: {str(err)}")
+        
+    if not results:
+        raise HTTPException(status_code=400, detail="No hay suficientes documentos indexados para este tema.")
+        
+    point = random.choice(results)
+    payload = point.payload
+    chunk_text = payload.get("text", "")
+    filename = payload.get("source", "Desconocido")
+    location = payload.get("location", "")
+    
+    # 2. Query Gemini to generate a question in JSON format
+    prompt = f"""
+    Basándote en el siguiente texto de un manual de medicina, genera una pregunta tipo test del examen MIR en España.
+    La pregunta puede ser un caso clínico o una duda teórica directa.
+    Genera 4 opciones (donde solo una sea correcta).
+    Devuelve la respuesta en formato JSON con la siguiente estructura exacta:
+    {{
+        "question": "Texto de la pregunta...",
+        "options": ["Opción 1", "Opción 2", "Opción 3", "Opción 4"],
+        "correct_index": 0, // Índice de la opción correcta de 0 a 3
+        "explanation": "Explicación detallada de por qué es correcta y desestimación breve de las incorrectas..."
+    }}
+
+    Texto médico de referencia:
+    \"\"\"
+    {chunk_text}
+    \"\"\"
+    """
+    
+    try:
+        response = engine.gemini_client.models.generate_content(
+            model=config.GENERATION_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.4,
+                response_mime_type="application/json"
+            )
+        )
+        
+        question_data = json.loads(response.text)
+        question_data["source_doc"] = filename
+        question_data["source_page"] = location
+        return question_data
+        
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Error al generar la pregunta con la IA: {str(err)}")
+
+@app.post("/api/tests/answer")
+async def save_test_answer(
+    test_session_id: str = Form(...),
+    question: str = Form(...),
+    subject: str = Form(...),
+    is_correct: int = Form(...), # 1 or 0
+    user: dict = Depends(get_current_user)
+):
+    """Save user test answer in the database."""
+    try:
+        database.log_test_answer(config.DEFAULT_DB_PATH, test_session_id, question, subject, is_correct)
+        return {"message": "Respuesta guardada con éxito."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al guardar respuesta: {str(e)}")
+
+@app.get("/api/tests/stats")
+async def get_test_stats(user: dict = Depends(get_current_user)):
+    """Retrieve detailed test stats and breakdown by medical specialty."""
+    try:
+        stats = database.get_test_stats(config.DEFAULT_DB_PATH, user["id"])
+        # Map filenames to human-readable names
+        subjects_mapped = []
+        for s in stats["subjects"]:
+            filename = s["subject"]
+            readable_name = config.MANUAL_NAMES.get(filename, filename.replace(".pdf", ""))
+            subjects_mapped.append({
+                "filename": filename,
+                "name": readable_name,
+                "total": s["total"],
+                "correct": s["correct"],
+                "incorrect": s["incorrect"],
+                "percent": s["percent"]
+            })
+        stats["subjects"] = subjects_mapped
         return stats
     except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Error al obtener estadísticas: {str(e)}"}
-        )
+        raise HTTPException(status_code=500, detail=f"Error al recuperar estadísticas de test: {str(e)}")
 
 # Mount static folder
 app.mount("/static", StaticFiles(directory="static"), name="static")

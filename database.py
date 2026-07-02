@@ -86,6 +86,31 @@ def init_db(db_path: Path) -> None:
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         """)
+        
+        # Create test_sessions table
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS test_sessions (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                subject TEXT NOT NULL,
+                total_questions INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        
+        # Create test_answers table
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS test_answers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                test_session_id TEXT NOT NULL,
+                question TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                is_correct INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (test_session_id) REFERENCES test_sessions(id) ON DELETE CASCADE
+            )
+        """)
         conn.commit()
         
     # Auto-populate Marcos and Elsa
@@ -206,35 +231,73 @@ def log_usage(db_path: Path, user_id: int, query_text: str, response_text: str, 
         )
         conn.commit()
 
-def get_user_stats(db_path: Path, user_id: int) -> Dict[str, Any]:
+# Test Sessions & Simulator Operations
+def create_test_session(db_path: Path, user_id: int, test_id: str, subject: str, total_questions: int) -> None:
+    with get_db_connection(db_path) as conn:
+        conn.execute(
+            "INSERT INTO test_sessions (id, user_id, subject, total_questions) VALUES (?, ?, ?, ?)",
+            (test_id, user_id, subject, total_questions)
+        )
+        conn.commit()
+
+def log_test_answer(db_path: Path, test_session_id: str, question: str, subject: str, is_correct: int) -> None:
+    with get_db_connection(db_path) as conn:
+        conn.execute(
+            "INSERT INTO test_answers (test_session_id, question, subject, is_correct) VALUES (?, ?, ?, ?)",
+            (test_session_id, question, subject, is_correct)
+        )
+        conn.commit()
+
+def get_test_stats(db_path: Path, user_id: int) -> Dict[str, Any]:
     with get_db_connection(db_path) as conn:
         cur = conn.cursor()
         
-        # Total queries
-        cur.execute("SELECT COUNT(*) FROM usage_stats WHERE user_id = ?", (user_id,))
-        total_queries = cur.fetchone()[0]
-        
-        # Total tokens used
-        cur.execute("SELECT SUM(tokens_used) FROM usage_stats WHERE user_id = ?", (user_id,))
-        total_tokens = cur.fetchone()[0] or 0
-        
-        # Active days
-        cur.execute("SELECT COUNT(DISTINCT DATE(created_at)) FROM usage_stats WHERE user_id = ?", (user_id,))
-        active_days = cur.fetchone()[0]
-        
-        # Recent queries count per day (last 7 days)
+        # Total questions answered
         cur.execute("""
-            SELECT DATE(created_at) as date, COUNT(*) as count 
-            FROM usage_stats 
-            WHERE user_id = ? AND created_at >= date('now', '-7 days')
-            GROUP BY DATE(created_at)
-            ORDER BY DATE(created_at) ASC
+            SELECT COUNT(*) 
+            FROM test_answers a 
+            JOIN test_sessions s ON a.test_session_id = s.id 
+            WHERE s.user_id = ?
         """, (user_id,))
-        queries_by_day = [dict(row) for row in cur.fetchall()]
+        total_answers = cur.fetchone()[0]
+        
+        # Correct questions answered
+        cur.execute("""
+            SELECT COUNT(*) 
+            FROM test_answers a 
+            JOIN test_sessions s ON a.test_session_id = s.id 
+            WHERE s.user_id = ? AND a.is_correct = 1
+        """, (user_id,))
+        correct_answers = cur.fetchone()[0]
+        
+        # Breakdown by subject
+        cur.execute("""
+            SELECT a.subject, COUNT(*) as total, SUM(a.is_correct) as correct
+            FROM test_answers a 
+            JOIN test_sessions s ON a.test_session_id = s.id 
+            WHERE s.user_id = ?
+            GROUP BY a.subject
+        """, (user_id,))
+        
+        subject_breakdown = []
+        for row in cur.fetchall():
+            subj = row["subject"]
+            tot = row["total"]
+            corr = row["correct"] or 0
+            pct = round((corr / tot) * 100, 1) if tot > 0 else 0
+            subject_breakdown.append({
+                "subject": subj,
+                "total": tot,
+                "correct": corr,
+                "incorrect": tot - corr,
+                "percent": pct
+            })
+            
+        success_rate = round((correct_answers / total_answers) * 100, 1) if total_answers > 0 else 0
         
         return {
-            "total_queries": total_queries,
-            "total_tokens": total_tokens,
-            "active_days": active_days,
-            "queries_by_day": queries_by_day
+            "total_answers": total_answers,
+            "correct_answers": correct_answers,
+            "success_rate": success_rate,
+            "subjects": subject_breakdown
         }
