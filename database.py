@@ -153,6 +153,29 @@ def init_db(db_path: Path) -> None:
                     (username, pw_hash, salt)
                 )
                 print(f"[!] Usuario inicial creado: {username}")
+        
+        # Seed official MIR questions if question_pool is empty
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM question_pool")
+        q_count = cur.fetchone()[0]
+        if q_count == 0:
+            seed_file = Path(__file__).parent / "static" / "official_questions_seed.json"
+            if seed_file.exists():
+                try:
+                    with open(seed_file, "r", encoding="utf-8") as f:
+                        questions = json.load(f)
+                    for q in questions:
+                        options_str = json.dumps(q["options"])
+                        conn.execute(
+                            """
+                            INSERT INTO question_pool (subject, difficulty, question, options, correct_index, explanation, source_doc, source_page)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            """,
+                            (q["subject"], q["difficulty"], q["question"], options_str, q["correct_index"], q["explanation"], q["source_doc"], q["source_page"])
+                        )
+                    print(f"[!] Seeder: Cargadas {len(questions)} preguntas oficiales del MIR en el banco.")
+                except Exception as seed_err:
+                    print(f"[!] Seeder Error: No se pudo sembrar el banco de preguntas: {seed_err}")
         conn.commit()
 
 # Session Management

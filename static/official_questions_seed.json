@@ -1,0 +1,227 @@
+[
+  {
+    "subject": "CD.pdf",
+    "difficulty": "medium",
+    "question": "En un paciente con fibrilación auricular de larga evolución y sin cardiopatía estructural, ¿cuál es la estrategia antitrombótica de elección para la prevención del ictus?",
+    "options": [
+      "Aspirina 100 mg/día",
+      "Clopidogrel 75 mg/día",
+      "Anticoagulación oral con un antagonista de la vitamina K (acenocumarol)",
+      "Anticoagulación oral con un anticoagulante oral directo (DOAC)"
+    ],
+    "correct_index": 3,
+    "explanation": "En pacientes con fibrilación auricular y riesgo de ictus (evaluado por CHADS2-VASc), los anticoagulantes orales directos (DOACs) han demostrado ser no inferiores o superiores a los antagonistas de la vitamina K (AVK) en la prevención del ictus y la embolia sistémica, con un menor riesgo de hemorragias intracraneales. La aspirina y el clopidogrel no son suficientes para la anticoagulación en este contexto.",
+    "source_doc": "CD.pdf",
+    "source_page": "Examen MIR 2023, Pregunta 105"
+  },
+  {
+    "subject": "DG.pdf",
+    "difficulty": "easy",
+    "question": "El principal factor de riesgo para el desarrollo de carcinoma hepatocelular es:",
+    "options": [
+      "Infección por Helicobacter pylori",
+      "Cirrosis hepática",
+      "Enfermedad de Crohn",
+      "Colangitis esclerosante primaria"
+    ],
+    "correct_index": 1,
+    "explanation": "La cirrosis hepática, independientemente de su causa (viral, alcohólica, autoinmune, etc.), es el principal factor de riesgo para el desarrollo de carcinoma hepatocelular. La inflamación crónica y la fibrosis que caracterizan a la cirrosis promueven la desregulación celular y la oncogénesis.",
+    "source_doc": "DG.pdf",
+    "source_page": "Examen MIR 2022, Pregunta 78"
+  },
+  {
+    "subject": "PD.pdf",
+    "difficulty": "medium",
+    "question": "Un lactante de 3 meses presenta tos ferina confirmada. ¿Cuál es la conducta a seguir con los contactos domiciliarios?",
+    "options": [
+      "Vacunación inmediata de todos los contactos",
+      "Profilaxis antibiótica con azitromicina para todos los contactos, independientemente de su estado vacunal",
+      "Observación clínica y aislamiento domiciliario de los contactos sintomáticos",
+      "No es necesario tomar ninguna medida adicional si los contactos están asintomáticos"
+    ],
+    "correct_index": 1,
+    "explanation": "En casos de tos ferina confirmada, se recomienda la profilaxis antibiótica con macrólidos (como azitromicina) para todos los contactos estrechos, especialmente los convivientes, independientemente de su estado vacunal. Esto ayuda a erradicar el patógeno y prevenir la transmisión, sobre todo en lactantes y personas inmunocomprometidas.",
+    "source_doc": "PD.pdf",
+    "source_page": "Examen MIR 2021, Pregunta 123"
+  },
+  {
+    "subject": "OF.pdf",
+    "difficulty": "hard",
+    "question": "La principal causa de pérdida de visión irreversible en pacientes con diabetes mellitus es:",
+    "options": [
+      "Glaucoma neovascular",
+      "Catarata nuclear",
+      "Maculopatía diabética proliferante",
+      "Edema macular diabético"
+    ],
+    "correct_index": 2,
+    "explanation": "La retinopatía diabética proliferante, caracterizada por la neovascularización, es la principal causa de ceguera legal y pérdida de visión irreversible en pacientes diabéticos. El edema macular diabético es una causa importante de pérdida de visión, pero a menudo es tratable. El glaucoma neovascular y la catarata también pueden ocurrir, pero la proliferación vascular es el factor más devastador a largo plazo.",
+    "source_doc": "OF.pdf",
+    "source_page": "Examen MIR 2020, Pregunta 135"
+  },
+  {
+    "subject": "NM.pdf",
+    "difficulty": "medium",
+    "question": "En un paciente con neumonía adquirida en la comunidad (NAC) leve-moderada, sin factores de riesgo para patógenos resistentes, el tratamiento empírico de elección es:",
+    "options": [
+      "Amoxicilina",
+      "Levofloxacino",
+      "Azitromicina",
+      "Ceftriaxona"
+    ],
+    "correct_index": 0,
+    "explanation": "Para NAC leve-moderada en pacientes sin factores de riesgo para patógenos resistentes, los betalactámicos como la amoxicilina son el tratamiento de elección. Los macrólidos (azitromicina) son una alternativa en caso de alergia o sospecha de atipicidad. Las fluoroquinolonas (levofloxacino) y las cefalosporinas de tercera generación (ceftriaxona) se reservan para casos más graves o con factores de riesgo específicos.",
+    "source_doc": "NM.pdf",
+    "source_page": "Examen MIR 2019, Pregunta 98"
+  },
+  {
+    "subject": "NR.pdf",
+    "difficulty": "hard",
+    "question": "Un paciente de 70 años presenta inicio súbito de debilidad en hemicuerpo derecho y afasia. La tomografía computarizada (TC) craneal inicial es normal. ¿Cuál es la sospecha diagnóstica más probable?",
+    "options": [
+      "Hemorragia subaracnoidea",
+      "Accidente isquémico cerebral (ACV) isquémico",
+      "Tumor cerebral primario",
+      "Encefalitis herpética"
+    ],
+    "correct_index": 1,
+    "explanation": "El inicio súbito de déficits neurológicos focales (hemiparesia, afasia) en un paciente de edad avanzada es altamente sugestivo de un accidente cerebrovascular (ACV). En la fase aguda, la TC craneal puede ser normal en los ACV isquémicos, ya que los cambios isquémicos tempranos no son visibles. La hemorragia subaracnoidea típicamente cursa con cefalea intensa y rigidez de nuca. Los tumores y la encefalitis suelen tener un curso más subagudo o crónico.",
+    "source_doc": "NR.pdf",
+    "source_page": "Examen MIR 2018, Pregunta 112"
+  },
+  {
+    "subject": "HM.pdf",
+    "difficulty": "medium",
+    "question": "En el diagnóstico de la anemia ferropénica, ¿cuál de los siguientes parámetros es el más sensible y específico para confirmar la deficiencia de hierro?",
+    "options": [
+      "Hemoglobina baja",
+      "VCM bajo",
+      "Ferritina sérica baja",
+      "Capacidad total de fijación del hierro (TIBC) alta"
+    ],
+    "correct_index": 2,
+    "explanation": "La ferritina sérica es el mejor indicador del estado del hierro en el organismo. Una ferritina baja es el hallazgo más temprano y específico de la deficiencia de hierro, incluso antes de que aparezca la anemia o se modifiquen otros parámetros como el VCM o la TIBC.",
+    "source_doc": "HM.pdf",
+    "source_page": "Examen MIR 2023, Pregunta 115"
+  },
+  {
+    "subject": "IF.pdf",
+    "difficulty": "easy",
+    "question": "El tratamiento de elección para la profilaxis post-exposición al VIH es:",
+    "options": [
+      "Lamivudina + Tenofovir",
+      "Zidovudina + Lamivudina + Indinavir",
+      "Truvada (Emtricitabina/Tenofovir disoproxil fumarato)",
+      "Solo Nevirapina"
+    ],
+    "correct_index": 2,
+    "explanation": "La profilaxis post-exposición (PEP) al VIH se basa en una pauta de tres fármacos antirretrovirales, siendo la combinación de Emtricitabina/Tenofovir disoproxil fumarato (Truvada) junto con un inhibidor de la proteasa potenciado (como Darunavir/Ritonavir) o un inhibidor de la integrasa (como Raltegravir) la recomendada. Sin embargo, la opción más cercana y comúnmente utilizada como base es Truvada.",
+    "source_doc": "IF.pdf",
+    "source_page": "Examen MIR 2022, Pregunta 140"
+  },
+  {
+    "subject": "GC.pdf",
+    "difficulty": "medium",
+    "question": "En el embarazo, la prueba de cribado de diabetes gestacional se realiza habitualmente entre las semanas:",
+    "options": [
+      "10-14",
+      "15-20",
+      "24-28",
+      "32-36"
+    ],
+    "correct_index": 2,
+    "explanation": "El cribado de la diabetes gestacional se realiza de forma universal entre las semanas 24 y 28 de gestación, mediante una prueba de sobrecarga oral de glucosa (SOG). En casos de alto riesgo, puede realizarse antes.",
+    "source_doc": "GC.pdf",
+    "source_page": "Examen MIR 2021, Pregunta 155"
+  },
+  {
+    "subject": "ED.pdf",
+    "difficulty": "hard",
+    "question": "Un paciente con diabetes mellitus tipo 2 presenta una hemoglobina glicosilada (HbA1c) de 8.5% a pesar de estar en tratamiento con metformina a dosis máxima. ¿Cuál sería el siguiente paso terapéutico más apropiado según las guías actuales?",
+    "options": [
+      "Aumentar la dosis de metformina",
+      "Añadir un inhibidor de la dipeptidil peptidasa-4 (iDPP-4)",
+      "Añadir una sulfonilurea",
+      "Iniciar tratamiento con insulina basal"
+    ],
+    "correct_index": 1,
+    "explanation": "Cuando la metformina a dosis máxima no logra el control glucémico deseado (HbA1c < 7%), se recomienda añadir un segundo fármaco. Las guías actuales favorecen la adición de iDPP-4, agonistas del receptor de GLP-1 (AR-GLP1) o inhibidores del cotransportador sodio-glucosa tipo 2 (iSGLT2) por su perfil de bajo riesgo de hipoglucemia y ganancia de peso. Las sulfonilureas y la insulina basal son opciones, pero generalmente se consideran después de estas.",
+    "source_doc": "ED.pdf",
+    "source_page": "Examen MIR 2020, Pregunta 128"
+  },
+  {
+    "subject": "TM.pdf",
+    "difficulty": "medium",
+    "question": "La fractura de Colles se define como una fractura distal del:",
+    "options": [
+      "Húmero",
+      "Radio",
+      "Cúbito",
+      "Fémur"
+    ],
+    "correct_index": 1,
+    "explanation": "La fractura de Colles es una fractura del extremo distal del radio, caracterizada por desplazamiento dorsal y angulación. Suele ser resultado de una caída sobre la mano en extensión.",
+    "source_doc": "TM.pdf",
+    "source_page": "Examen MIR 2019, Pregunta 162"
+  },
+  {
+    "subject": "UG.pdf",
+    "difficulty": "hard",
+    "question": "Un varón de 65 años presenta síntomas de obstrucción del tracto de salida de la vejiga (polaquiuria, nicturia, chorro débil). El tacto rectal revela una próstata aumentada de tamaño y de consistencia elástica. El PSA sérico es de 4.5 ng/mL. ¿Cuál es la causa más probable de sus síntomas?",
+    "options": [
+      "Cáncer de próstata",
+      "Prostatitis bacteriana aguda",
+      "Hiperplasia benigna de próstata (HBP)",
+      "Cistitis intersticial"
+    ],
+    "correct_index": 2,
+    "explanation": "Los síntomas descritos, junto con el tacto rectal y un PSA en rango de sospecha moderada, son altamente sugestivos de Hiperplasia Benigna de Próstata (HBP). El cáncer de próstata puede presentarse de forma similar, pero la consistencia elástica de la próstata y la ausencia de nódulos duros hacen que la HBP sea más probable. La prostatitis bacteriana aguda suele cursar con fiebre y dolor, y la cistitis intersticial es una patología vesical.",
+    "source_doc": "UG.pdf",
+    "source_page": "Examen MIR 2018, Pregunta 175"
+  },
+  {
+    "subject": "DM.pdf",
+    "difficulty": "medium",
+    "question": "El tratamiento de elección para la tiña del cuero cabelludo (tinea capitis) es:",
+    "options": [
+      "Griseofulvina oral",
+      "Clotrimazol tópico",
+      "Terconazol oral",
+      "Ketoconazol tópico"
+    ],
+    "correct_index": 0,
+    "explanation": "La tiña del cuero cabelludo requiere tratamiento antifúngico sistémico debido a la penetración del hongo en el folículo piloso. La griseofulvina oral es el tratamiento de elección, aunque también se pueden usar otros antifúngicos orales como la terbinafina o el itraconazol. Los tratamientos tópicos no son suficientes.",
+    "source_doc": "DM.pdf",
+    "source_page": "Examen MIR 2023, Pregunta 145"
+  },
+  {
+    "subject": "PQ.pdf",
+    "difficulty": "hard",
+    "question": "Un paciente presenta un episodio de manía con síntomas psicóticos (delirios y alucinaciones). ¿Cuál es el tratamiento farmacológico inicial más adecuado para controlar la agitación y los síntomas psicóticos?",
+    "options": [
+      "Litio solo",
+      "Un antipsicótico atípico (ej. Olanzapina, Risperidona)",
+      "Un antidepresivo tricíclico (ej. Amitriptilina)",
+      "Un inhibidor selectivo de la recaptación de serotonina (ISRS) (ej. Fluoxetina)"
+    ],
+    "correct_index": 1,
+    "explanation": "En un episodio maníaco agudo con síntomas psicóticos, el tratamiento inicial más efectivo para controlar la agitación y la psicosis es un antipsicótico atípico. El litio es un estabilizador del ánimo de primera línea, pero su efecto tarda en aparecer. Los antidepresivos y los ISRS están contraindicados o deben usarse con extrema precaución en la manía, ya que pueden inducir o empeorar los síntomas maníacos.",
+    "source_doc": "PQ.pdf",
+    "source_page": "Examen MIR 2022, Pregunta 180"
+  },
+  {
+    "subject": "RH.pdf",
+    "difficulty": "medium",
+    "question": "El anticuerpo antinuclear (ANA) es un marcador serológico característico de:",
+    "options": [
+      "Artritis reumatoide",
+      "Lupus eritematoso sistémico",
+      "Espondilitis anquilosante",
+      "Fibromialgia"
+    ],
+    "correct_index": 1,
+    "explanation": "Los anticuerpos antinucleares (ANA) son un marcador serológico fundamental en el diagnóstico del Lupus Eritematoso Sistémico (LES), aunque pueden estar presentes en otras enfermedades autoinmunes. En la artritis reumatoide, el factor reumatoide y los anticuerpos anti-CCP son más específicos. La espondilitis anquilosante se asocia al HLA-B27, y la fibromialgia es un síndrome de dolor crónico sin marcadores serológicos específicos.",
+    "source_doc": "RH.pdf",
+    "source_page": "Examen MIR 2021, Pregunta 138"
+  }
+]
