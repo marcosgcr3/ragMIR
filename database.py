@@ -348,13 +348,15 @@ def get_pool_questions(db_path: Path, user_id: int, subject: str, difficulty: st
             query += " AND difficulty = ?"
             params.append(difficulty)
             
-        # Exclude all questions previously answered by this user
+        # Exclude questions answered in the last 100 attempts by this user
         query += """
             AND id NOT IN (
                 SELECT a.question_id 
                 FROM test_answers a
                 JOIN test_sessions s ON a.test_session_id = s.id
                 WHERE s.user_id = ? AND a.question_id IS NOT NULL
+                ORDER BY a.created_at DESC
+                LIMIT 100
             )
         """
         params.append(user_id)
