@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.css?v=6">
+    <link rel="stylesheet" href="/static/style.css?v=7">
     <link rel="icon" type="image/png" href="/static/favicon.png">
 </head>
 <body>
@@ -18,44 +18,45 @@
         <!-- Sidebar overlay for mobile drawer -->
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-        <!-- Sidebar Controls -->
-        <aside class="sidebar">
-            <!-- Navigation banner ─ full width at top -->
-            <nav class="nav-banner">
-                <a href="/" class="nav-banner-btn nav-chat nav-active">
-                    <i class="fa-solid fa-comments"></i>
-                    Chat IA
-                </a>
-                <a href="/test" class="nav-banner-btn nav-sim">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                    Simulador
-                </a>
-                <a href="/diagnostic" class="nav-banner-btn nav-diag">
-                    <i class="fa-solid fa-brain"></i>
-                    Diagnóstico
-                </a>
-            </nav>
-
-            <div class="sidebar-header">
-                <div class="logo-icon"><img src="/static/logo.png" alt="RAG MIR Logo" class="logo-image"></div>
-                <div class="logo-title">
+        <!-- Global Top Navigation Bar -->
+        <nav class="top-nav-bar">
+            <div class="top-nav-left">
+                <img src="/static/logo.png" alt="RAG MIR Logo" class="top-nav-logo">
+                <div class="top-nav-brand">
                     <h2>RAG MIR</h2>
                     <span>Tutor de Medicina</span>
                 </div>
             </div>
-
-            <!-- User Profile card -->
-            <div class="user-profile" id="user-profile" style="display: none;">
-                <div class="user-info">
+            
+            <div class="top-nav-center">
+                <a href="/" class="top-nav-tab nav-chat nav-active">
+                    <i class="fa-solid fa-comments"></i>
+                    Chat IA
+                </a>
+                <a href="/test" class="top-nav-tab nav-sim">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    Simulador
+                </a>
+                <a href="/diagnostic" class="top-nav-tab nav-diag">
+                    <i class="fa-solid fa-brain"></i>
+                    Diagnóstico
+                </a>
+            </div>
+            
+            <div class="top-nav-right">
+                <div class="top-nav-user" id="user-profile" style="display: none;">
                     <i class="fa-solid fa-circle-user"></i>
                     <span id="user-display-name">Usuario</span>
                 </div>
-                <div class="user-actions">
-                    <button class="btn-user-action btn-logout" id="btn-logout" title="Cerrar Sesión">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                    </button>
-                </div>
+                <button class="btn-top-logout btn-logout" id="btn-logout" title="Cerrar Sesión">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
             </div>
+        </nav>
+
+        <div class="app-body">
+            <!-- Sidebar Controls -->
+            <aside class="sidebar">
 
             <!-- Chat Sessions Panel -->
             <div class="panel chat-sessions-panel">
@@ -185,7 +186,8 @@
                 </form>
             </footer>
         </main>
-    </div>
+    </div> <!-- /app-body -->
+</div> <!-- /app-container -->
 
     <!-- Login Overlay -->
     <div class="login-overlay" id="login-overlay" style="display: none;">
