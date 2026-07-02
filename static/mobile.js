@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modalList) {
                 modalList.innerHTML = '<li style="justify-content: center; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Cargando documentos...</li>';
                 try {
-                    const res = await fetch('/api/database/status');
+                    const res = await fetch('/api/status');
                     if (res.ok) {
                         const status = await res.json();
                         renderModalFiles(status.files, modalList);
