@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentUser = null;
     let attachedImageFile = null;
     let attachedImageBase64 = null;
+    let previouslyIndexedFiles = null;
 
     // Helper: Simple Markdown Formatter
     function formatResponseText(text) {
@@ -429,7 +430,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 statChunks.textContent = data.total_chunks;
                 statLlm.textContent = data.model;
                 
-                renderIndexedFiles(data.files || []);
+                const currentFiles = data.files || [];
+                
+                // Compare with previously indexed files to show toast notification
+                if (previouslyIndexedFiles !== null) {
+                    const currentNames = currentFiles.map(f => f.name);
+                    const newFiles = currentNames.filter(name => !previouslyIndexedFiles.includes(name));
+                    newFiles.forEach(name => {
+                        showToast(`El documento "${name.replace('.pdf', '')}" ya se ha indexado.`);
+                    });
+                }
+                previouslyIndexedFiles = currentFiles.map(f => f.name);
+                
+                renderIndexedFiles(currentFiles);
             } else {
                 dbIndicator.className = 'pulse-dot inactive';
                 dbIndicator.style.backgroundColor = 'var(--text-muted)';
@@ -437,6 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 statChunks.textContent = '-';
                 statLlm.textContent = '-';
                 indexedFilesList.innerHTML = '<li class="empty-list">No hay colección de base de datos activa.</li>';
+                previouslyIndexedFiles = [];
             }
         } catch (e) {
             console.error("Error checking database status:", e);
@@ -457,12 +471,65 @@ document.addEventListener('DOMContentLoaded', () => {
             li.innerHTML = `
                 <div class="doc-info">
                     <i class="fa-solid fa-file-pdf"></i>
-                    <span class="doc-name" title="${file.name}">${file.name}</span>
+                    <span class="doc-name" title="${file.name}">${file.name.replace('.pdf', '')}</span>
                 </div>
-                <span class="doc-badge">${file.chunks} chunks</span>
+                <div class="doc-meta-actions">
+                    <span class="doc-badge">${file.chunks} chunks</span>
+                    <button class="btn-delete-doc" title="Eliminar documento"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
             `;
+            
+            // Delete handler
+            const deleteBtn = li.querySelector('.btn-delete-doc');
+            deleteBtn.addEventListener('click', (e) => deleteDocument(file.name, e));
+            
             indexedFilesList.appendChild(li);
         });
+    }
+
+    // Helper: Show floating toast notification
+    function showToast(message) {
+        const oldToast = document.querySelector('.toast-notification');
+        if (oldToast) oldToast.remove();
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerHTML = `
+            <i class="fa-solid fa-circle-check"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 50);
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    // Call DELETE API to remove document and its chunks
+    async function deleteDocument(filename, event) {
+        if (event) event.stopPropagation();
+        
+        const confirmDelete = confirm(`¿Estás seguro de que deseas eliminar el documento "${filename}"? Esto borrará todos sus fragmentos de la base de datos y no se podrá recuperar.`);
+        if (!confirmDelete) return;
+        
+        try {
+            const res = await fetch(`/api/documents/${encodeURIComponent(filename)}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                showToast(`El documento "${filename.replace('.pdf', '')}" ha sido eliminado.`);
+                checkDatabaseStatus();
+            } else {
+                const err = await res.json();
+                alert(`Error al eliminar: ${err.error || err.detail}`);
+            }
+        } catch (err) {
+            console.error("Error deleting document:", err);
+            alert("Error de red al eliminar el documento.");
+        }
     }
 
     // Check Database Status every 30 seconds

@@ -281,6 +281,25 @@ async def post_clear(user: dict = Depends(get_current_user)):
             content={"error": f"Error al vaciar la base de datos: {str(e)}"}
         )
 
+@app.delete("/api/documents/{filename}")
+async def delete_document(filename: str, user: dict = Depends(get_current_user)):
+    """Delete a document from Qdrant index and the physical storage."""
+    try:
+        # Delete from Qdrant index
+        vector_store.delete_file_from_index(config.DEFAULT_DB_PATH, filename)
+        
+        # Delete physical file
+        file_path = MANUALS_DIR / filename
+        if file_path.exists():
+            file_path.unlink()
+            
+        return {"message": f"Documento '{filename}' eliminado con éxito."}
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error al eliminar documento: {str(e)}"}
+        )
+
 @app.get("/api/stats")
 async def get_stats(user: dict = Depends(get_current_user)):
     """Get the usage stats for the authenticated user."""
