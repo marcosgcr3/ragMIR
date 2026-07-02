@@ -284,6 +284,10 @@ async def post_clear(user: dict = Depends(get_current_user)):
 @app.delete("/api/documents/{filename}")
 async def delete_document(filename: str, user: dict = Depends(get_current_user)):
     """Delete a document from Qdrant index and the physical storage."""
+    import re
+    if re.match(r"^[A-Z]{2}\.pdf$", filename):
+        raise HTTPException(status_code=400, detail="No se pueden eliminar los manuales oficiales.")
+        
     try:
         # Delete from Qdrant index
         vector_store.delete_file_from_index(config.DEFAULT_DB_PATH, filename)

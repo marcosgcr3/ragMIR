@@ -468,6 +468,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         files.forEach(file => {
             const li = document.createElement('li');
+            
+            // Check if it is an official manual (2 uppercase letters like 'CD.pdf', 'RH.pdf')
+            const isOfficial = /^[A-Z]{2}\.pdf$/.test(file.name);
+            const deleteButtonHtml = isOfficial 
+                ? '' 
+                : `<button class="btn-delete-doc" title="Eliminar documento"><i class="fa-solid fa-trash-can"></i></button>`;
+            
             li.innerHTML = `
                 <div class="doc-info">
                     <i class="fa-solid fa-file-pdf"></i>
@@ -475,13 +482,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="doc-meta-actions">
                     <span class="doc-badge">${file.chunks} chunks</span>
-                    <button class="btn-delete-doc" title="Eliminar documento"><i class="fa-solid fa-trash-can"></i></button>
+                    ${deleteButtonHtml}
                 </div>
             `;
             
-            // Delete handler
-            const deleteBtn = li.querySelector('.btn-delete-doc');
-            deleteBtn.addEventListener('click', (e) => deleteDocument(file.name, e));
+            // Delete handler (only for user-uploaded documents)
+            if (!isOfficial) {
+                const deleteBtn = li.querySelector('.btn-delete-doc');
+                deleteBtn.addEventListener('click', (e) => deleteDocument(file.name, e));
+            }
             
             indexedFilesList.appendChild(li);
         });
