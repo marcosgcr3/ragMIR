@@ -44,14 +44,20 @@ STATIC_DIR = config.BASE_DIR / "static"
 STATIC_DIR.mkdir(exist_ok=True)
 
 @app.get("/", response_class=HTMLResponse)
-async def read_root():
+async def read_root(response: Response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     index_file = STATIC_DIR / "index.html"
     if not index_file.exists():
          raise HTTPException(status_code=404, detail="Frontend index.html no encontrado.")
     return index_file.read_text(encoding="utf-8")
 
 @app.get("/test", response_class=HTMLResponse)
-async def read_test_root():
+async def read_test_root(response: Response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     test_file = STATIC_DIR / "test.html"
     if not test_file.exists():
          raise HTTPException(status_code=404, detail="Frontend test.html no encontrado.")
@@ -556,7 +562,10 @@ async def get_test_stats(user: dict = Depends(get_current_user)):
 # --- DIAGNOSTIC ENDPOINTS ---
 
 @app.get("/diagnostic", response_class=HTMLResponse)
-async def read_diagnostic():
+async def read_diagnostic(response: Response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     diag_file = STATIC_DIR / "diagnostic.html"
     if not diag_file.exists():
         raise HTTPException(status_code=404, detail="diagnostic.html no encontrado.")
