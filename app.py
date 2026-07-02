@@ -418,14 +418,33 @@ def generate_and_save_question(subject_filter: str, difficulty: str) -> dict:
         print(f"Error generating question via Gemini: {err}")
         raise HTTPException(status_code=500, detail="Error al generar preguntas dinámicas mediante Gemini.")
 
+def background_generate_questions(subject_filter: str, difficulty: str, count: int):
+    """Generate new questions in the background to grow the pool without slowing down tests."""
+    for _ in range(count):
+        try:
+            subj_filter = subject_filter
+            if subject_filter == "All":
+                status = vector_store.get_database_status(config.DEFAULT_DB_PATH)
+                files = list(status.get("files", {}).keys())
+                if files:
+                    subj_filter = random.choice(files)
+                else:
+                    print("[Background] No files indexed. Cannot generate new questions.")
+                    break
+            generate_and_save_question(subj_filter, difficulty)
+            print(f"[Background] Successfully generated and stored a new question for {subj_filter} ({difficulty}).")
+        except Exception as e:
+            print(f"[Background] Error generating question: {e}")
+
 @app.post("/api/tests/start")
 async def start_test_session(
+    background_tasks: BackgroundTasks,
     subject: str = Form(...),
     difficulty: str = Form(...),
     total_questions: int = Form(...),
     user: dict = Depends(get_current_user)
 ):
-    """Start a test session, load/generate questions in batch, and return the complete exam list."""
+    """Start a test session, load questions instantly, and generate new pool questions asynchronously."""
     test_id = str(int(random.random() * 1000000000))
     
     # 1. Create the session in the DB
@@ -438,24 +457,27 @@ async def start_test_session(
         total_questions
     )
     
-    # 2. Get existing questions from pool (limit pool selection to force generation of new questions)
-    forced_new = max(1, min(3, int(total_questions * 0.2)))
-    max_from_pool = total_questions - forced_new
-    
+    # 2. Get existing questions from pool up to the requested count
     questions = database.get_pool_questions(
         config.DEFAULT_DB_PATH, 
         user["id"], 
         subject, 
         difficulty, 
-        max_from_pool
+        total_questions
     )
     
-    # 3. If there aren't enough questions in the pool or we need to fulfill the forced new quota, generate them
+    # 3. Check if we have enough questions in the database
     needed = total_questions - len(questions)
-    if needed > 0:
+    if needed <= 0:
+        # We have enough questions! Respond instantly and queue background generation of new questions
+        # This keeps the pool growing without making the user wait.
+        forced_new_count = max(1, min(3, int(total_questions * 0.2)))
+        background_tasks.add_task(background_generate_questions, subject, difficulty, forced_new_count)
+    else:
+        # If we don't have enough, generate the missing questions synchronously
+        print(f"Pool only had {len(questions)}/{total_questions} questions. Generating {needed} synchronously...")
         for _ in range(needed):
             try:
-                # If subject is "All", pick a random manual from indexed ones
                 subj_filter = subject
                 if subject == "All":
                     status = vector_store.get_database_status(config.DEFAULT_DB_PATH)
@@ -463,12 +485,13 @@ async def start_test_session(
                     if files:
                         subj_filter = random.choice(files)
                     else:
-                        raise HTTPException(status_code=400, detail="No hay manuales indexados en la base de datos.")
+                        print("Sync generation fallback: No files indexed in vector store.")
+                        break
                         
                 new_q = generate_and_save_question(subj_filter, difficulty)
                 questions.append(new_q)
             except Exception as e:
-                print(f"Error generating question in batch: {e}")
+                print(f"Error generating question synchronously: {e}")
                 
     if not questions:
         raise HTTPException(
