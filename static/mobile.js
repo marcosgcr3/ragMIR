@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnDocs.addEventListener('click', async () => {
             docsModal.style.display = 'flex';
             // Only fetch and render dynamically if we are NOT on the chat page (where app.js manages it)
-            const isChatPage = !!document.querySelector('script[src*="app.js"]');
+            const isChatPage = !!document.querySelector('script[src*="/static/app.js"]');
             if (isChatPage) return;
 
             const modalList = document.getElementById('indexed-files-list');
