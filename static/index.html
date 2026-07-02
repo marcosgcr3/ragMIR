@@ -25,6 +25,22 @@
                 </div>
             </div>
 
+            <!-- User Profile card -->
+            <div class="user-profile" id="user-profile" style="display: none;">
+                <div class="user-info">
+                    <i class="fa-solid fa-circle-user"></i>
+                    <span id="user-display-name">Usuario</span>
+                </div>
+                <div class="user-actions">
+                    <button class="btn-user-action" id="btn-show-stats" title="Ver Estadísticas">
+                        <i class="fa-solid fa-chart-simple"></i>
+                    </button>
+                    <button class="btn-user-action btn-logout" id="btn-logout" title="Cerrar Sesión">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+
             <!-- Chat Sessions Panel -->
             <div class="panel chat-sessions-panel">
                 <button class="btn btn-primary btn-block" id="btn-new-chat">
@@ -151,6 +167,66 @@
             </footer>
         </main>
     </div>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="/static/logo.png" alt="RAG MIR Logo">
+            </div>
+            <h2>RAG MIR</h2>
+            <p>Ingresa para acceder al Tutor de Medicina Inteligente</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Usuario</label>
+                    <select id="login-username" required>
+                        <option value="" disabled selected>Selecciona tu usuario</option>
+                        <option value="Marcos">Marcos</option>
+                        <option value="Elsa">Elsa</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Contraseña</label>
+                    <input type="password" id="login-password" placeholder="Tu contraseña" required>
+                </div>
+                <div class="login-error" id="login-error" style="display: none;">Contraseña incorrecta</div>
+                <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div class="modal-overlay" id="stats-modal" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-chart-line"></i> Estadísticas de Estudio</h2>
+                <button class="btn-close-modal" id="btn-close-stats"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-kpis">
+                    <div class="kpi-card">
+                        <span class="kpi-val" id="kpi-queries">0</span>
+                        <span class="kpi-label">Consultas</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-val" id="kpi-tokens">0</span>
+                        <span class="kpi-label">Tokens Utilizados</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-val" id="kpi-days">0</span>
+                        <span class="kpi-label">Días Activos</span>
+                    </div>
+                </div>
+                <div class="stats-charts">
+                    <h3>Actividad Reciente (Últimos 7 días)</h3>
+                    <div class="chart-container" id="stats-chart-bars">
+                        <!-- Rendered dynamically -->
+                        <p class="empty-chart">Aún no hay actividad registrada.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
-<script src="/static/app.js?v=3"></script>
+<script src="/static/app.js?v=4"></script>
 </html>

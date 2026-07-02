@@ -1,15 +1,18 @@
 import os
 import io
+import json
 import shutil
+import base64
 import urllib3
 from pathlib import Path
-from typing import Optional
-from fastapi import FastAPI, File, UploadFile, Form, BackgroundTasks, HTTPException
+from typing import Optional, List, Dict, Any
+from fastapi import FastAPI, File, UploadFile, Form, BackgroundTasks, HTTPException, Depends, Request, Cookie
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 import config
 import vector_store
+import database
 from rag_engine import RAGEngine
 
 # Suppress self-signed certificate warnings for local Qdrant VPS calls
@@ -19,12 +22,22 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 MANUALS_DIR = config.BASE_DIR / "manuals"
 MANUALS_DIR.mkdir(exist_ok=True)
 
+# Initialize Relational Database
+database.init_db(config.DEFAULT_DB_PATH)
+
 # Initialize RAGEngine
 engine = RAGEngine()
 
 app = FastAPI(title="RAG MIR Assistant API")
 
-# Check if static directory exists
+# Dependency: Get current logged-in user
+async def get_current_user(request: Request, session_token: Optional[str] = Cookie(None)):
+    user = database.validate_session(config.DEFAULT_DB_PATH, session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="No autorizado. Por favor inicia sesión.")
+    return user
+
+# Serve Frontend Index
 STATIC_DIR = config.BASE_DIR / "static"
 STATIC_DIR.mkdir(exist_ok=True)
 
@@ -32,15 +45,80 @@ STATIC_DIR.mkdir(exist_ok=True)
 async def read_root():
     index_file = STATIC_DIR / "index.html"
     if not index_file.exists():
-         raise HTTPException(status_code=404, detail="Frontend index.html not found.")
+         raise HTTPException(status_code=404, detail="Frontend index.html no encontrado.")
     return index_file.read_text(encoding="utf-8")
 
+# --- AUTH ENPOINTS ---
+@app.post("/api/auth/login")
+async def login(username: str = Form(...), password: str = Form(...)):
+    db_path = config.DEFAULT_DB_PATH
+    with database.get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, password_hash, salt FROM users WHERE username = ?", (username,))
+        row = cur.fetchone()
+        
+    if not row or not database.verify_password(password, row["password_hash"], row["salt"]):
+        raise HTTPException(status_code=400, detail="Usuario o contraseña incorrectos.")
+        
+    token = database.create_session(db_path, row["id"])
+    
+    response = JSONResponse(content={"message": "Sesión iniciada con éxito", "username": username})
+    response.set_cookie(
+        key="session_token",
+        value=token,
+        httponly=True,
+        max_age=30 * 24 * 60 * 60, # 30 days
+        samesite="lax",
+        secure=False # Set to True if using HTTPS
+    )
+    return response
+
+@app.post("/api/auth/logout")
+async def logout(request: Request, session_token: Optional[str] = Cookie(None)):
+    database.delete_session(config.DEFAULT_DB_PATH, session_token)
+    response = JSONResponse(content={"message": "Sesión cerrada con éxito"})
+    response.delete_cookie("session_token")
+    return response
+
+@app.get("/api/auth/me")
+async def get_me(user: dict = Depends(get_current_user)):
+    return user
+
+# --- CHAT SESSION ENDPOINTS ---
+@app.get("/api/sessions")
+async def list_sessions(user: dict = Depends(get_current_user)):
+    return database.get_user_sessions(config.DEFAULT_DB_PATH, user["id"])
+
+@app.post("/api/sessions")
+async def create_session(session_id: str = Form(...), title: str = Form(...), user: dict = Depends(get_current_user)):
+    return database.create_user_session(config.DEFAULT_DB_PATH, user["id"], session_id, title)
+
+@app.delete("/api/sessions/{session_id}")
+async def delete_session(session_id: str, user: dict = Depends(get_current_user)):
+    database.delete_user_session(config.DEFAULT_DB_PATH, user["id"], session_id)
+    return {"message": "Sesión eliminada con éxito"}
+
+@app.get("/api/sessions/{session_id}/messages")
+async def get_messages(session_id: str, user: dict = Depends(get_current_user)):
+    db_path = config.DEFAULT_DB_PATH
+    with database.get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT user_id FROM chat_sessions WHERE id = ?", (session_id,))
+        row = cur.fetchone()
+        
+    if not row:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    if row["user_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="No tienes acceso a esta sesión de chat.")
+        
+    return database.get_session_messages(db_path, session_id)
+
+# --- CORE RAG ENDPOINTS ---
 @app.get("/api/status")
-async def get_status():
+async def get_status(user: dict = Depends(get_current_user)):
     """Get database statistics and status."""
     try:
         status = vector_store.get_database_status(config.DEFAULT_DB_PATH)
-        # Convert files dict to list for easier frontend rendering
         files_list = []
         if status.get("files"):
             for filename, info in status["files"].items():
@@ -65,15 +143,20 @@ async def get_status():
 @app.post("/api/query")
 async def post_query(
     question: str = Form(...),
+    session_id: str = Form(...),
     history: Optional[str] = Form(None),
-    image: Optional[UploadFile] = File(None)
+    image: Optional[UploadFile] = File(None),
+    user: dict = Depends(get_current_user)
 ):
     """Execute RAG query, supporting text, history/memory, and optional image uploads."""
-    import json
     try:
         image_bytes = None
+        image_base64_str = None
         if image and image.filename:
             image_bytes = await image.read()
+            # Convert image to base64 to store in messages
+            mime = image.content_type or "image/png"
+            image_base64_str = f"data:{mime};base64,{base64.b64encode(image_bytes).decode('utf-8')}"
             
         history_list = None
         if history:
@@ -103,6 +186,33 @@ async def post_query(
                 })
                 seen.add(src_key)
                 
+        # Save messages to Relational Database
+        database.add_session_message(
+            config.DEFAULT_DB_PATH, 
+            session_id, 
+            "user", 
+            question, 
+            image_base64_str
+        )
+        database.add_session_message(
+            config.DEFAULT_DB_PATH, 
+            session_id, 
+            "model", 
+            result.get("answer", "Sin respuesta."), 
+            None, 
+            sources
+        )
+        
+        # Log Usage stats
+        tokens = result.get("usage", {}).get("total_tokens", 0) if result.get("usage") else 0
+        database.log_usage(
+            config.DEFAULT_DB_PATH, 
+            user["id"], 
+            question, 
+            result.get("answer", "Sin respuesta."), 
+            tokens
+        )
+        
         return {
             "answer": result.get("answer", "Sin respuesta."),
             "sources": sources,
@@ -131,7 +241,8 @@ def run_indexing():
 @app.post("/api/upload")
 async def post_upload(
     file: UploadFile = File(...),
-    background_tasks: BackgroundTasks = BackgroundTasks()
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    user: dict = Depends(get_current_user)
 ):
     """Upload a PDF manual and trigger background indexing."""
     global is_indexing
@@ -159,7 +270,7 @@ async def post_upload(
         )
 
 @app.post("/api/clear")
-async def post_clear():
+async def post_clear(user: dict = Depends(get_current_user)):
     """Clear the vector database collection."""
     try:
         vector_store.clear_database(config.DEFAULT_DB_PATH)
@@ -168,6 +279,18 @@ async def post_clear():
         return JSONResponse(
             status_code=500,
             content={"error": f"Error al vaciar la base de datos: {str(e)}"}
+        )
+
+@app.get("/api/stats")
+async def get_stats(user: dict = Depends(get_current_user)):
+    """Get the usage stats for the authenticated user."""
+    try:
+        stats = database.get_user_stats(config.DEFAULT_DB_PATH, user["id"])
+        return stats
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error al obtener estadísticas: {str(e)}"}
         )
 
 # Mount static folder
