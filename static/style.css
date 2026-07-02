@@ -58,6 +58,8 @@ body {
     flex-shrink: 0;
     padding: 24px;
     z-index: 10;
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .sidebar-header {
