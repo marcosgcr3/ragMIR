@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIR RAG - Tutor de Medicina Inteligente</title>
+    <!-- Google Fonts: Outfit (headings) and Inter (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon"><i class="fa-solid fa-notes-medical"></i></div>
+                <div class="logo-title">
+                    <h2>RAG MIR</h2>
+                    <span>Tutor de Medicina</span>
+                </div>
+            </div>
+
+            <!-- Chat Sessions Panel -->
+            <div class="panel chat-sessions-panel">
+                <button class="btn btn-primary btn-block" id="btn-new-chat">
+                    <i class="fa-solid fa-plus"></i> Nueva Consulta
+                </button>
+                <div class="sessions-list-container">
+                    <ul class="sessions-list" id="chat-sessions-list">
+                        <!-- Loaded dynamically -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Database Status Panel -->
+            <div class="panel status-panel">
+                <h3><i class="fa-solid fa-circle-nodes"></i> Estado de la Base</h3>
+                <div class="status-indicator">
+                    <span class="pulse-dot active" id="db-indicator"></span>
+                    <span id="db-status-text">Conectado a Qdrant</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Colección:</span>
+                        <span class="stat-val" id="stat-collection">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Chunks:</span>
+                        <span class="stat-val" id="stat-chunks">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Redactor LLM:</span>
+                        <span class="stat-val" id="stat-llm">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF Upload Section -->
+            <div class="panel upload-panel">
+                <h3><i class="fa-solid fa-file-arrow-up"></i> Cargar Manuales PDF</h3>
+                <div class="drag-drop-zone" id="drop-zone">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <p>Arrastra tu manual PDF aquí o haz clic para buscar</p>
+                    <input type="file" id="file-input" accept=".pdf" style="display: none;">
+                </div>
+                <div id="upload-progress-container" class="upload-progress-container" style="display: none;">
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="upload-progress"></div>
+                    </div>
+                    <span class="progress-text" id="upload-status-text">Subiendo...</span>
+                </div>
+            </div>
+
+            <!-- Indexed Documents List -->
+            <div class="panel doc-panel">
+                <h3><i class="fa-solid fa-folder-open"></i> Documentos Indexados</h3>
+                <div class="doc-list-container">
+                    <ul class="doc-list" id="indexed-files-list">
+                        <li class="empty-list">No hay documentos indexados.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <div class="header-info">
+                    <h1>Consulta del Estudiante MIR</h1>
+                    <p>Gemini buscará en tus manuales CTO y responderá con precisión médica instantánea.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-icon" title="Reiniciar chat" id="btn-reset-chat">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Message Area -->
+            <div class="messages-container" id="chat-messages">
+                <!-- Welcome Message -->
+                <div class="welcome-banner" id="welcome-banner">
+                    <div class="banner-icon"><i class="fa-solid fa-brain"></i></div>
+                    <h2>¿En qué te puedo ayudar hoy?</h2>
+                    <p>Pega preguntas del MIR con sus opciones, sube imágenes de casos clínicos (electrocardiogramas, biopsias, radiografías) o consulta dudas teóricas de tus manuales indexados.</p>
+                    <div class="quick-tips">
+                        <div class="tip-card">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                            <span>Casos clínicos</span>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fa-solid fa-paste"></i>
+                            <span>Copia y pega preguntas</span>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>Manuales CTO y AMIR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image preview block before sending -->
+            <div class="image-preview-container" id="image-preview-area" style="display: none;">
+                <div class="preview-wrapper">
+                    <img id="image-preview-src" src="" alt="Vista previa">
+                    <button class="btn-remove-preview" id="btn-remove-image" title="Eliminar imagen"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <!-- Chat Input Controls -->
+            <footer class="chat-footer">
+                <form class="input-form" id="chat-form">
+                    <div class="input-wrapper">
+                        <!-- Attachment trigger button -->
+                        <button type="button" class="btn-input-attach" id="btn-attach" title="Adjuntar imagen (ECG, radiografía...)">
+                            <i class="fa-solid fa-image"></i>
+                        </button>
+                        <input type="file" id="image-input" accept="image/*" style="display: none;">
+
+                        <!-- Textarea input -->
+                        <textarea class="chat-input" id="chat-input" placeholder="Pregunta algo sobre tus manuales de medicina... (Shift+Enter para nueva línea)" rows="1"></textarea>
+
+                        <!-- Send Button -->
+                        <button type="submit" class="btn-input-send" id="btn-send" title="Enviar pregunta">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </footer>
+        </main>
+    </div>
+</body>
+<script src="/static/app.js?v=3"></script>
+</html>

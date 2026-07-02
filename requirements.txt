@@ -1,0 +1,13 @@
+google-genai>=0.1.1
+python-dotenv>=1.0.1
+pypdf>=5.1.0
+python-docx>=1.1.2
+numpy>=2.0.0
+tqdm>=4.66.0
+qdrant-client>=1.9.0
+openai>=1.0.0
+playwright>=1.40.0
+fastapi>=0.100.0
+uvicorn>=0.20.0
+python-multipart>=0.0.5
+pillow>=9.0.0

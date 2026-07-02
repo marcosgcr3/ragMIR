@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# App-specific data and manuals
+manuals/
+manuales/
+db/
+.gemini/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Testing and cache
+.pytest_cache/
+.mypy_cache/
