@@ -438,16 +438,19 @@ async def start_test_session(
         total_questions
     )
     
-    # 2. Get existing questions from pool
+    # 2. Get existing questions from pool (limit pool selection to force generation of new questions)
+    forced_new = max(1, min(3, int(total_questions * 0.2)))
+    max_from_pool = total_questions - forced_new
+    
     questions = database.get_pool_questions(
         config.DEFAULT_DB_PATH, 
         user["id"], 
         subject, 
         difficulty, 
-        total_questions
+        max_from_pool
     )
     
-    # 3. If there aren't enough questions in the pool, generate the missing ones
+    # 3. If there aren't enough questions in the pool or we need to fulfill the forced new quota, generate them
     needed = total_questions - len(questions)
     if needed > 0:
         for _ in range(needed):
