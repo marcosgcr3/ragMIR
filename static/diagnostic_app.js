@@ -208,14 +208,13 @@ const DiagApp = (() => {
         document.getElementById('btn-skip').style.display = 'none';
         document.getElementById('btn-next').disabled = false;
 
-        try {
-            const fd = new FormData();
-            fd.append('session_id', sessionId);
-            fd.append('question_id', q.id);
-            fd.append('selected_index', selectedIdx);
-            fd.append('is_correct', isCorrect);
-            await fetch('/api/diagnostic/answer', { method: 'POST', body: fd });
-        } catch (e) { console.warn('Error saving answer:', e); }
+        const fd = new FormData();
+        fd.append('session_id', sessionId);
+        fd.append('question_id', q.id);
+        fd.append('selected_index', selectedIdx);
+        fd.append('is_correct', isCorrect);
+        fetch('/api/diagnostic/answer', { method: 'POST', body: fd })
+            .catch(e => console.warn('Error saving answer:', e));
     }
 
     // ── Skip ──────────────────────────────────────────────────────────────
@@ -232,14 +231,13 @@ const DiagApp = (() => {
         document.getElementById('btn-skip').style.display = 'none';
         document.getElementById('btn-next').disabled = false;
 
-        try {
-            const fd = new FormData();
-            fd.append('session_id', sessionId);
-            fd.append('question_id', questions[currentIdx].id);
-            fd.append('selected_index', -1);
-            fd.append('is_correct', 0);
-            await fetch('/api/diagnostic/answer', { method: 'POST', body: fd });
-        } catch (e) { console.warn('Error saving skip:', e); }
+        const fd = new FormData();
+        fd.append('session_id', sessionId);
+        fd.append('question_id', questions[currentIdx].id);
+        fd.append('selected_index', -1);
+        fd.append('is_correct', 0);
+        fetch('/api/diagnostic/answer', { method: 'POST', body: fd })
+            .catch(e => console.warn('Error saving skip:', e));
     }
 
     // ── Next ──────────────────────────────────────────────────────────────

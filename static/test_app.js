@@ -361,14 +361,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isCorrect) testScore++;
         
-        try {
-            await fetch('/api/tests/answer', {
-                method: 'POST',
-                body: answerFormData
-            });
-        } catch (e) {
-            console.error("Error logging answer response:", e);
-        }
+        // Save answer results to SQLite database in the background without blocking the UI
+        fetch('/api/tests/answer', {
+            method: 'POST',
+            body: answerFormData
+        }).catch(e => console.error("Error logging answer response:", e));
 
         // Show Explanation Details Card
         explanationText.textContent = currentQuestion.explanation;
