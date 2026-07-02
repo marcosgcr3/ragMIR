@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropZone = document.getElementById('drop-zone');
     const btnAttach = document.getElementById('btn-attach');
     const btnSend = document.getElementById('btn-send');
-    const btnResetChat = document.getElementById('btn-reset-chat');
     const btnRemoveImage = document.getElementById('btn-remove-image');
     
     const imagePreviewArea = document.getElementById('image-preview-area');
@@ -310,18 +309,6 @@ document.addEventListener('DOMContentLoaded', () => {
         imageInput.value = '';
         imagePreviewSrc.src = '';
         imagePreviewArea.style.display = 'none';
-    });
-
-    // Reset Chat Window / Reset current session
-    btnResetChat.addEventListener('click', () => {
-        const currentSession = sessions.find(s => s.id === currentSessionId);
-        if (currentSession) {
-            currentSession.messages = [];
-            currentSession.title = "Nueva Consulta";
-            saveSessions();
-            renderSessionsList();
-            renderChatMessages();
-        }
     });
 
     // Create a new chat session
