@@ -15,6 +15,9 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- Sidebar overlay for mobile drawer -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
         <!-- Sidebar Controls -->
         <aside class="sidebar">
             <!-- Navigation banner ─ full width at top -->
@@ -120,6 +123,9 @@
         <!-- Main Chat Area -->
         <main class="chat-area">
             <header class="chat-header">
+                <button class="hamburger-btn" id="btn-hamburger" title="Menú">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <div class="header-info">
                     <h1>Consulta del Estudiante MIR</h1>
                     <p>Gemini buscará en tus manuales CTO y responderá con precisión médica instantánea.</p>
@@ -182,7 +188,7 @@
     </div>
 
     <!-- Login Overlay -->
-    <div class="login-overlay" id="login-overlay">
+    <div class="login-overlay" id="login-overlay" style="display: none;">
         <div class="login-card">
             <div class="login-logo">
                 <img src="/static/logo.png" alt="RAG MIR Logo">
@@ -205,8 +211,24 @@
                 <div class="login-error" id="login-error" style="display: none;">Contraseña incorrecta</div>
                 <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
             </form>
-        </div>
+    </div>
+
+    <!-- Mobile Bottom Tab Bar -->
+    <div class="mobile-tab-bar">
+        <a href="/" class="mobile-tab nav-chat nav-active">
+            <i class="fa-solid fa-comments"></i>
+            Chat
+        </a>
+        <a href="/test" class="mobile-tab nav-sim">
+            <i class="fa-solid fa-graduation-cap"></i>
+            Simulador
+        </a>
+        <a href="/diagnostic" class="mobile-tab nav-diag">
+            <i class="fa-solid fa-brain"></i>
+            Diagnóstico
+        </a>
     </div>
 </body>
 <script src="/static/app.js?v=4"></script>
+<script src="/static/mobile.js"></script>
 </html>

@@ -14,6 +14,9 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- Sidebar overlay for mobile drawer -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
         <!-- Sidebar controls for Test configurations -->
         <aside class="sidebar">
             <!-- Navigation banner ─ full width at top -->
@@ -121,6 +124,9 @@
         <main class="chat-area" id="test-main-area">
             <!-- Header -->
             <header class="chat-header">
+                <button class="hamburger-btn" id="btn-hamburger" title="Menú">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <div class="header-info">
                     <h1>Simulador de Examen MIR</h1>
                     <p>La IA generará preguntas de nivel MIR a partir de la base de conocimientos médica compartida.</p>
@@ -222,6 +228,23 @@
             </form>
         </div>
     </div>
+
+    <!-- Mobile Bottom Tab Bar -->
+    <div class="mobile-tab-bar">
+        <a href="/" class="mobile-tab nav-chat">
+            <i class="fa-solid fa-comments"></i>
+            Chat
+        </a>
+        <a href="/test" class="mobile-tab nav-sim nav-active">
+            <i class="fa-solid fa-graduation-cap"></i>
+            Simulador
+        </a>
+        <a href="/diagnostic" class="mobile-tab nav-diag">
+            <i class="fa-solid fa-brain"></i>
+            Diagnóstico
+        </a>
+    </div>
 </body>
 <script src="/static/test_app.js?v=1"></script>
+<script src="/static/mobile.js"></script>
 </html>

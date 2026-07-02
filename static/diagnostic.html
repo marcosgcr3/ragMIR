@@ -228,6 +228,8 @@
 </head>
 <body>
 <div class="app-container">
+    <!-- Sidebar overlay for mobile drawer -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
     <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
     <aside class="sidebar">
@@ -286,6 +288,9 @@
     <!-- ── Main area ───────────────────────────────────────────────────── -->
     <main class="chat-area diag-main">
         <header class="chat-header">
+            <button class="hamburger-btn" id="btn-hamburger" title="Menú">
+                <i class="fa-solid fa-bars"></i>
+            </button>
             <div class="header-info">
                 <h1>Test de Diagnóstico MIR</h1>
                 <p id="header-subtitle">50 preguntas adaptativas · Sistema de puntuación MIR (+3 / -1)</p>
@@ -426,8 +431,24 @@
             <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
         </form>
     </div>
-</div>
+    </div>
 
-<script src="/static/diagnostic_app.js"></script>
+    <!-- Mobile Bottom Tab Bar -->
+    <div class="mobile-tab-bar">
+        <a href="/" class="mobile-tab nav-chat">
+            <i class="fa-solid fa-comments"></i>
+            Chat
+        </a>
+        <a href="/test" class="mobile-tab nav-sim">
+            <i class="fa-solid fa-graduation-cap"></i>
+            Simulador
+        </a>
+        <a href="/diagnostic" class="mobile-tab nav-diag nav-active">
+            <i class="fa-solid fa-brain"></i>
+            Diagnóstico
+        </a>
+    </div>
 </body>
+<script src="/static/diagnostic_app.js"></script>
+<script src="/static/mobile.js"></script>
 </html>
