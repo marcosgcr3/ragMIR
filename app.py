@@ -311,32 +311,17 @@ async def delete_document(filename: str, user: dict = Depends(get_current_user))
         )
 
 # --- TEST SIMULATOR ENDPOINTS ---
-@app.post("/api/tests/session")
-async def start_test_session(
-    test_id: str = Form(...),
-    subject: str = Form(...),
-    total_questions: int = Form(...),
-    user: dict = Depends(get_current_user)
-):
-    """Start a new test session in the database."""
-    try:
-        database.create_test_session(config.DEFAULT_DB_PATH, user["id"], test_id, subject, total_questions)
-        return {"message": "Sesión de test iniciada con éxito."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al iniciar sesión de test: {str(e)}")
-
-@app.post("/api/tests/generate-question")
-async def generate_test_question(subject: str = Form(...), user: dict = Depends(get_current_user)):
-    """Generate a multiple-choice question from Gemini based on indexed manuals."""
+def generate_and_save_question(subject_filter: str, difficulty: str) -> dict:
+    """Helper to generate a question from Qdrant/Gemini and save it to the question pool."""
     client = vector_store.get_client()
     collection = config.QDRANT_COLLECTION
     
     # 1. Fetch a random chunk from Qdrant
     filter_obj = None
-    if subject != "All":
+    if subject_filter != "All":
         from qdrant_client.models import Filter, FieldCondition, MatchValue
         filter_obj = Filter(
-            must=[FieldCondition(key="source", match=MatchValue(value=subject))]
+            must=[FieldCondition(key="source", match=MatchValue(value=subject_filter))]
         )
         
     try:
@@ -348,10 +333,11 @@ async def generate_test_question(subject: str = Form(...), user: dict = Depends(
             with_vectors=False
         )
     except Exception as err:
-        raise HTTPException(status_code=500, detail=f"Error al consultar la base de datos: {str(err)}")
+        print(f"Error scrolling Qdrant: {err}")
+        results = []
         
     if not results:
-        raise HTTPException(status_code=400, detail="No hay suficientes documentos indexados para este tema.")
+        raise HTTPException(status_code=400, detail="No hay suficientes documentos indexados para generar preguntas.")
         
     point = random.choice(results)
     payload = point.payload
@@ -359,17 +345,31 @@ async def generate_test_question(subject: str = Form(...), user: dict = Depends(
     filename = payload.get("source", "Desconocido")
     location = payload.get("location", "")
     
-    # 2. Query Gemini to generate a question in JSON format
+    # Determine difficulty level prompt
+    diff_val = difficulty
+    if diff_val == "exam":
+        diff_val = random.choice(["easy", "medium", "hard"])
+        
+    difficulty_instructions = ""
+    if diff_val == "easy":
+        difficulty_instructions = "Genera una pregunta directa y relativamente fácil de memorización o concepto básico del MIR. Por ejemplo, definir un síntoma clásico, una definición o una asociación directa."
+    elif diff_val == "medium":
+        difficulty_instructions = "Genera una pregunta de dificultad intermedia tipo caso clínico MIR convencional, donde se describa la historia de un paciente con síntomas estándar y se solicite el diagnóstico más probable o el tratamiento de primera elección."
+    elif diff_val == "hard":
+        difficulty_instructions = "Genera una pregunta MIR de dificultad de examen muy elevada. Puede ser un caso clínico complejo con síntomas atípicos, diagnóstico diferencial sutil, o preguntas específicas sobre fármacos de segunda línea, efectos adversos raros o dosificaciones específicas."
+        
+    # 2. Query Gemini
     prompt = f"""
-    Basándote en el siguiente texto de un manual de medicina, genera una pregunta tipo test del examen MIR en España.
-    La pregunta puede ser un caso clínico o una duda teórica directa.
-    Genera 4 opciones (donde solo una sea correcta).
+    Basándote en el siguiente texto de un manual de medicina, genera una pregunta de opción múltiple tipo test del examen MIR en España.
+    {difficulty_instructions}
+    
+    Genera exactamente 4 opciones de respuesta coherentes (donde solo una sea correcta).
     Devuelve la respuesta en formato JSON con la siguiente estructura exacta:
     {{
         "question": "Texto de la pregunta...",
         "options": ["Opción 1", "Opción 2", "Opción 3", "Opción 4"],
         "correct_index": 0, // Índice de la opción correcta de 0 a 3
-        "explanation": "Explicación detallada de por qué es correcta y desestimación breve de las incorrectas..."
+        "explanation": "Explicación detallada de por qué es la opción correcta y por qué las otras son incorrectas..."
     }}
 
     Texto médico de referencia:
@@ -388,25 +388,106 @@ async def generate_test_question(subject: str = Form(...), user: dict = Depends(
             )
         )
         
-        question_data = json.loads(response.text)
-        question_data["source_doc"] = filename
-        question_data["source_page"] = location
-        return question_data
+        q_data = json.loads(response.text)
         
+        # Save to pool
+        qid = database.add_pool_question(
+            config.DEFAULT_DB_PATH,
+            filename,
+            diff_val,
+            q_data["question"],
+            q_data["options"],
+            q_data["correct_index"],
+            q_data["explanation"],
+            filename,
+            location
+        )
+        
+        return {
+            "id": qid,
+            "subject": filename,
+            "difficulty": diff_val,
+            "question": q_data["question"],
+            "options": q_data["options"],
+            "correct_index": q_data["correct_index"],
+            "explanation": q_data["explanation"],
+            "source_doc": filename,
+            "source_page": location
+        }
     except Exception as err:
-        raise HTTPException(status_code=500, detail=f"Error al generar la pregunta con la IA: {str(err)}")
+        print(f"Error generating question via Gemini: {err}")
+        raise HTTPException(status_code=500, detail="Error al generar preguntas dinámicas mediante Gemini.")
+
+@app.post("/api/tests/start")
+async def start_test_session(
+    subject: str = Form(...),
+    difficulty: str = Form(...),
+    total_questions: int = Form(...),
+    user: dict = Depends(get_current_user)
+):
+    """Start a test session, load/generate questions in batch, and return the complete exam list."""
+    test_id = str(int(random.random() * 1000000000))
+    
+    # 1. Create the session in the DB
+    database.create_test_session(
+        config.DEFAULT_DB_PATH, 
+        user["id"], 
+        test_id, 
+        subject, 
+        difficulty, 
+        total_questions
+    )
+    
+    # 2. Get existing questions from pool
+    questions = database.get_pool_questions(
+        config.DEFAULT_DB_PATH, 
+        user["id"], 
+        subject, 
+        difficulty, 
+        total_questions
+    )
+    
+    # 3. If there aren't enough questions in the pool, generate the missing ones
+    needed = total_questions - len(questions)
+    if needed > 0:
+        for _ in range(needed):
+            try:
+                # If subject is "All", pick a random manual from indexed ones
+                subj_filter = subject
+                if subject == "All":
+                    status = vector_store.get_database_status(config.DEFAULT_DB_PATH)
+                    files = list(status.get("files", {}).keys())
+                    if files:
+                        subj_filter = random.choice(files)
+                    else:
+                        raise HTTPException(status_code=400, detail="No hay manuales indexados en la base de datos.")
+                        
+                new_q = generate_and_save_question(subj_filter, difficulty)
+                questions.append(new_q)
+            except Exception as e:
+                print(f"Error generating question in batch: {e}")
+                
+    if not questions:
+        raise HTTPException(
+            status_code=400, 
+            detail="No se pudieron recuperar o generar preguntas para este tema/dificultad. Verifica que tus manuales estén indexados."
+        )
+        
+    return {
+        "test_session_id": test_id,
+        "questions": questions
+    }
 
 @app.post("/api/tests/answer")
 async def save_test_answer(
     test_session_id: str = Form(...),
-    question: str = Form(...),
-    subject: str = Form(...),
+    question_id: int = Form(...),
     is_correct: int = Form(...), # 1 or 0
     user: dict = Depends(get_current_user)
 ):
     """Save user test answer in the database."""
     try:
-        database.log_test_answer(config.DEFAULT_DB_PATH, test_session_id, question, subject, is_correct)
+        database.log_test_answer(config.DEFAULT_DB_PATH, test_session_id, question_id, is_correct)
         return {"message": "Respuesta guardada con éxito."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al guardar respuesta: {str(e)}")

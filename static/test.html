@@ -52,6 +52,15 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="test-difficulty">Dificultad</label>
+                        <select id="test-difficulty" required>
+                            <option value="easy">Fácil (Teoría y básicos)</option>
+                            <option value="medium" selected>Intermedio (Caso clínico estándar)</option>
+                            <option value="hard">Difícil (Avanzado / Detallado)</option>
+                            <option value="exam">Modo Examen (Aleatorio)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Cantidad de Preguntas</label>
                         <div class="test-size-selector">
                             <input type="radio" id="size-5" name="test-size" value="5" checked>

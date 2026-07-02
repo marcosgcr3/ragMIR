@@ -45,9 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let testSessionId = null;
     let testSubject = 'All';
+    let testDifficulty = 'medium';
     let testTotalQuestions = 5;
     let testCurrentIndex = 0;
     let testScore = 0;
+    let testQuestions = [];
     let currentQuestion = null;
     let hasAnsweredCurrent = false;
 
@@ -190,81 +192,77 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         
         testSubject = testSubjectSelect.value;
+        testDifficulty = document.getElementById('test-difficulty').value;
         const selectedSize = document.querySelector('input[name="test-size"]:checked');
         testTotalQuestions = parseInt(selectedSize ? selectedSize.value : 5);
         
-        testSessionId = Date.now().toString();
-        testCurrentIndex = 1;
-        testScore = 0;
+        // Switch layout to active exam immediately and render the spinner loader
+        welcomeState.style.display = 'none';
+        finishedState.style.display = 'none';
+        activeState.style.display = 'block';
+        configPanelCard.style.pointerEvents = 'none';
+        configPanelCard.style.opacity = '0.5';
         
-        // Log new test session to server
+        questionSubject.textContent = "Cargando...";
+        questionText.innerHTML = '<span class="loading-pulse">Inicializando simulacro y cargando preguntas médicas con la IA... <i class="fa-solid fa-spinner fa-spin"></i></span>';
+        optionsList.innerHTML = '';
+        explanationCard.style.display = 'none';
+        
+        progressText.textContent = `Preparando examen...`;
+        progressFill.style.width = `0%`;
+        
         const sessionFormData = new FormData();
-        sessionFormData.append('test_id', testSessionId);
         sessionFormData.append('subject', testSubject);
+        sessionFormData.append('difficulty', testDifficulty);
         sessionFormData.append('total_questions', testTotalQuestions);
         
         try {
-            const startRes = await fetch('/api/tests/session', {
+            const startRes = await fetch('/api/tests/start', {
                 method: 'POST',
                 body: sessionFormData
             });
             
             if (startRes.ok) {
-                // Switch states
-                welcomeState.style.display = 'none';
-                finishedState.style.display = 'none';
-                activeState.style.display = 'block';
-                configPanelCard.style.pointerEvents = 'none';
-                configPanelCard.style.opacity = '0.5';
+                const data = await startRes.json();
+                testSessionId = data.test_session_id;
+                testQuestions = data.questions;
                 
-                await fetchQuestion();
+                testCurrentIndex = 1;
+                testScore = 0;
+                
+                showQuestion();
             } else {
-                alert("Error al iniciar sesión de test.");
+                const errData = await startRes.json();
+                alert("Error al iniciar el examen: " + (errData.detail || "Fallo en el servidor."));
+                welcomeState.style.display = 'flex';
+                activeState.style.display = 'none';
+                configPanelCard.style.pointerEvents = 'auto';
+                configPanelCard.style.opacity = '1';
             }
         } catch (err) {
             console.error("Error initiating test session:", err);
             alert("Error de conexión al iniciar el examen.");
+            welcomeState.style.display = 'flex';
+            activeState.style.display = 'none';
+            configPanelCard.style.pointerEvents = 'auto';
+            configPanelCard.style.opacity = '1';
         }
     });
 
-    // Fetch question from server RAG Vector Store & LLM
-    async function fetchQuestion() {
+    // Render the current batch question from memory (zero lag!)
+    function showQuestion() {
         hasAnsweredCurrent = false;
         explanationCard.style.display = 'none';
         
-        // Render Loading State (Skeleton or spinner)
-        questionSubject.textContent = "Cargando...";
-        questionText.innerHTML = '<span class="loading-pulse">Generando pregunta tipo MIR con la IA a partir de los apuntes... <i class="fa-solid fa-spinner fa-spin"></i></span>';
-        optionsList.innerHTML = '';
+        currentQuestion = testQuestions[testCurrentIndex - 1];
+        if (!currentQuestion) return;
         
         // Update Progress Bar UI
         progressText.textContent = `Pregunta ${testCurrentIndex} de ${testTotalQuestions}`;
         const pctPercent = (testCurrentIndex / testTotalQuestions) * 100;
         progressFill.style.width = `${pctPercent}%`;
         
-        // Fetch Question API
-        const questionFormData = new FormData();
-        questionFormData.append('subject', testSubject);
-        
-        try {
-            const res = await fetch('/api/tests/generate-question', {
-                method: 'POST',
-                body: questionFormData
-            });
-            
-            if (res.ok) {
-                currentQuestion = await res.json();
-                renderQuestion();
-            } else {
-                const data = await res.json();
-                questionText.textContent = `Error: ${data.detail || "No se pudo generar la pregunta. Verifica que el tema seleccionado contenga documentos indexados."}`;
-                questionSubject.textContent = "Error";
-            }
-        } catch (err) {
-            console.error("Error fetching question:", err);
-            questionText.textContent = "Error de red al conectar con el servidor.";
-            questionSubject.textContent = "Error de red";
-        }
+        renderQuestion();
     }
 
     // Render loaded question structure
@@ -317,11 +315,10 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.style.cursor = 'default';
         });
 
-        // Save answer results to SQLite database
+        // Save answer results to SQLite database using question_id
         const answerFormData = new FormData();
         answerFormData.append('test_session_id', testSessionId);
-        answerFormData.append('question', currentQuestion.question);
-        answerFormData.append('subject', currentQuestion.source_doc);
+        answerFormData.append('question_id', currentQuestion.id);
         answerFormData.append('is_correct', isCorrect ? 1 : 0);
         
         if (isCorrect) testScore++;
@@ -352,10 +349,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Handle Click Next Question / End test
-    btnNextQuestion.addEventListener('click', async () => {
+    btnNextQuestion.addEventListener('click', () => {
         if (testCurrentIndex < testTotalQuestions) {
             testCurrentIndex++;
-            await fetchQuestion();
+            showQuestion();
         } else {
             endTest();
         }

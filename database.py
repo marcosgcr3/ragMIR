@@ -87,15 +87,40 @@ def init_db(db_path: Path) -> None:
             )
         """)
         
+        # Drop old test tables if we need to modify schema
+        cur = conn.cursor()
+        cur.execute("PRAGMA table_info(test_sessions)")
+        cols = [c[1] for c in cur.fetchall()]
+        if cols and "difficulty" not in cols:
+            conn.execute("DROP TABLE IF EXISTS test_answers")
+            conn.execute("DROP TABLE IF EXISTS test_sessions")
+            
         # Create test_sessions table
         conn.execute("""
             CREATE TABLE IF NOT EXISTS test_sessions (
                 id TEXT PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 subject TEXT NOT NULL,
+                difficulty TEXT NOT NULL,
                 total_questions INTEGER NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        
+        # Create question_pool table
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS question_pool (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                subject TEXT NOT NULL,
+                difficulty TEXT NOT NULL,
+                question TEXT NOT NULL,
+                options TEXT NOT NULL, -- JSON string
+                correct_index INTEGER NOT NULL,
+                explanation TEXT NOT NULL,
+                source_doc TEXT NOT NULL,
+                source_page TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         
@@ -104,11 +129,11 @@ def init_db(db_path: Path) -> None:
             CREATE TABLE IF NOT EXISTS test_answers (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 test_session_id TEXT NOT NULL,
-                question TEXT NOT NULL,
-                subject TEXT NOT NULL,
+                question_id INTEGER,
                 is_correct INTEGER NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (test_session_id) REFERENCES test_sessions(id) ON DELETE CASCADE
+                FOREIGN KEY (test_session_id) REFERENCES test_sessions(id) ON DELETE CASCADE,
+                FOREIGN KEY (question_id) REFERENCES question_pool(id) ON DELETE SET NULL
             )
         """)
         conn.commit()
@@ -232,19 +257,19 @@ def log_usage(db_path: Path, user_id: int, query_text: str, response_text: str, 
         conn.commit()
 
 # Test Sessions & Simulator Operations
-def create_test_session(db_path: Path, user_id: int, test_id: str, subject: str, total_questions: int) -> None:
+def create_test_session(db_path: Path, user_id: int, test_id: str, subject: str, difficulty: str, total_questions: int) -> None:
     with get_db_connection(db_path) as conn:
         conn.execute(
-            "INSERT INTO test_sessions (id, user_id, subject, total_questions) VALUES (?, ?, ?, ?)",
-            (test_id, user_id, subject, total_questions)
+            "INSERT INTO test_sessions (id, user_id, subject, difficulty, total_questions) VALUES (?, ?, ?, ?, ?)",
+            (test_id, user_id, subject, difficulty, total_questions)
         )
         conn.commit()
 
-def log_test_answer(db_path: Path, test_session_id: str, question: str, subject: str, is_correct: int) -> None:
+def log_test_answer(db_path: Path, test_session_id: str, question_id: int, is_correct: int) -> None:
     with get_db_connection(db_path) as conn:
         conn.execute(
-            "INSERT INTO test_answers (test_session_id, question, subject, is_correct) VALUES (?, ?, ?, ?)",
-            (test_session_id, question, subject, is_correct)
+            "INSERT INTO test_answers (test_session_id, question_id, is_correct) VALUES (?, ?, ?)",
+            (test_session_id, question_id, is_correct)
         )
         conn.commit()
 
@@ -270,13 +295,14 @@ def get_test_stats(db_path: Path, user_id: int) -> Dict[str, Any]:
         """, (user_id,))
         correct_answers = cur.fetchone()[0]
         
-        # Breakdown by subject
+        # Breakdown by subject (joining with question_pool to get subject of the question)
         cur.execute("""
-            SELECT a.subject, COUNT(*) as total, SUM(a.is_correct) as correct
+            SELECT q.subject, COUNT(*) as total, SUM(a.is_correct) as correct
             FROM test_answers a 
             JOIN test_sessions s ON a.test_session_id = s.id 
+            JOIN question_pool q ON a.question_id = q.id
             WHERE s.user_id = ?
-            GROUP BY a.subject
+            GROUP BY q.subject
         """, (user_id,))
         
         subject_breakdown = []
@@ -301,3 +327,66 @@ def get_test_stats(db_path: Path, user_id: int) -> Dict[str, Any]:
             "success_rate": success_rate,
             "subjects": subject_breakdown
         }
+
+def get_pool_questions(db_path: Path, user_id: int, subject: str, difficulty: str, limit: int) -> List[Dict[str, Any]]:
+    with get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        
+        # Construct filter query
+        query = """
+            SELECT id, subject, difficulty, question, options, correct_index, explanation, source_doc, source_page
+            FROM question_pool
+            WHERE 1=1
+        """
+        params = []
+        
+        if subject != "All":
+            query += " AND subject = ?"
+            params.append(subject)
+            
+        if difficulty != "exam":
+            query += " AND difficulty = ?"
+            params.append(difficulty)
+            
+        # Spaced repetition: Exclude questions answered in the last 50 attempts by this user
+        query += """
+            AND id NOT IN (
+                SELECT a.question_id 
+                FROM test_answers a
+                JOIN test_sessions s ON a.test_session_id = s.id
+                WHERE s.user_id = ? AND a.question_id IS NOT NULL
+                ORDER BY a.created_at DESC
+                LIMIT 50
+            )
+        """
+        params.append(user_id)
+        
+        query += " ORDER BY RANDOM() LIMIT ?"
+        params.append(limit)
+        
+        cur.execute(query, tuple(params))
+        
+        questions = []
+        for row in cur.fetchall():
+            q = dict(row)
+            try:
+                q["options"] = json.loads(q["options"])
+            except Exception:
+                q["options"] = []
+            questions.append(q)
+            
+        return questions
+
+def add_pool_question(db_path: Path, subject: str, difficulty: str, question: str, options: List[str], correct_index: int, explanation: str, source_doc: str, source_page: str) -> int:
+    options_str = json.dumps(options)
+    with get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO question_pool (subject, difficulty, question, options, correct_index, explanation, source_doc, source_page)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (subject, difficulty, question, options_str, correct_index, explanation, source_doc, source_page)
+        )
+        conn.commit()
+        return cur.lastrowid
