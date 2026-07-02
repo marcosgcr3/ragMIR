@@ -371,7 +371,7 @@ body {
 }
 
 .chat-header {
-    height: 80px;
+    height: 70px;
     padding: 0 40px;
     display: flex;
     align-items: center;
@@ -1566,13 +1566,15 @@ body {
 .nav-banner {
     display: flex;
     gap: 2px;
+    height: 70px;                          /* matches .chat-header */
     background: rgba(0, 0, 0, 0.25);
     border: none;
     border-bottom: 1px solid var(--border-color);
     border-radius: 0;
-    padding: 8px 12px;
+    padding: 0 10px;
     margin: -24px -24px 24px -24px;
     backdrop-filter: blur(10px);
+    align-items: center;
 }
 
 .nav-banner-btn {
