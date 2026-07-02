@@ -136,6 +136,35 @@ def init_db(db_path: Path) -> None:
                 FOREIGN KEY (question_id) REFERENCES question_pool(id) ON DELETE SET NULL
             )
         """)
+        # Create diagnostic_sessions table
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS diagnostic_sessions (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                total_questions INTEGER NOT NULL,
+                correct_answers INTEGER DEFAULT 0,
+                incorrect_answers INTEGER DEFAULT 0,
+                skipped_answers INTEGER DEFAULT 0,
+                mir_score REAL DEFAULT 0,
+                completed INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Create diagnostic_answers table
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS diagnostic_answers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                question_id INTEGER,
+                selected_index INTEGER,
+                is_correct INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (session_id) REFERENCES diagnostic_sessions(id) ON DELETE CASCADE,
+                FOREIGN KEY (question_id) REFERENCES question_pool(id) ON DELETE SET NULL
+            )
+        """)
         conn.commit()
         
     # Auto-populate Marcos and Elsa
@@ -410,6 +439,215 @@ def get_pool_questions(db_path: Path, user_id: int, subject: str, difficulty: st
             questions.append(q)
             
         return questions
+
+# ─── DIAGNOSTIC FUNCTIONS ────────────────────────────────────────────────────
+
+DIAGNOSTIC_DISTRIBUTION = {
+    # subject_file: number of questions in the 50-question diagnostic
+    "CD.pdf": 4, "NR.pdf": 3, "DG.pdf": 3, "PD.pdf": 2, "GC.pdf": 2,
+    "ED.pdf": 2, "TM.pdf": 2, "IF.pdf": 2, "NF.pdf": 2, "NM.pdf": 2,
+    "HM.pdf": 2, "RH.pdf": 1, "CG.pdf": 1, "DM.pdf": 1, "PQ.pdf": 1,
+    "ON.pdf": 1, "AN.pdf": 1, "OF.pdf": 1, "OR.pdf": 1, "FC.pdf": 1,
+    "AP.pdf": 1, "UG.pdf": 1, "EP.pdf": 1, "AL.pdf": 1, "IG.pdf": 1,
+    "GT.pdf": 1, "AT.pdf": 1, "UR.pdf": 1, "BL.pdf": 1, "GR.pdf": 1,
+    "RX.pdf": 1, "NQ.pdf": 1, "MF.pdf": 1, "CI.pdf": 1, "RE.pdf": 1,
+}
+
+def create_diagnostic_session(db_path: Path, user_id: int, session_id: str, total_questions: int) -> None:
+    with get_db_connection(db_path) as conn:
+        conn.execute(
+            "INSERT INTO diagnostic_sessions (id, user_id, total_questions) VALUES (?, ?, ?)",
+            (session_id, user_id, total_questions)
+        )
+        conn.commit()
+
+def get_diagnostic_questions(
+    db_path: Path,
+    user_id: int,
+    extra_subjects: Optional[List[str]] = None
+) -> List[Dict[str, Any]]:
+    """Select 50 questions proportionally by subject, excluding previously seen ones.
+    extra_subjects: list of subject filenames to add extra weight to (weakness boosting)."""
+    import random as _random
+
+    distribution = dict(DIAGNOSTIC_DISTRIBUTION)
+
+    # Boost weak subjects: add 1 extra question for each weakness subject (up to 7 extra)
+    if extra_subjects:
+        total_base = sum(distribution.values())
+        slots_remaining = 50 - total_base
+        boosted = 0
+        for subj in extra_subjects:
+            if boosted >= slots_remaining:
+                break
+            if subj in distribution:
+                distribution[subj] += 1
+                boosted += 1
+
+    all_questions: List[Dict[str, Any]] = []
+
+    with get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        # Get IDs of questions previously seen in any diagnostic by this user
+        cur.execute(
+            """
+            SELECT DISTINCT da.question_id
+            FROM diagnostic_answers da
+            JOIN diagnostic_sessions ds ON da.session_id = ds.id
+            WHERE ds.user_id = ? AND da.question_id IS NOT NULL
+            """,
+            (user_id,)
+        )
+        seen_ids = {row[0] for row in cur.fetchall()}
+
+        for subject, count in distribution.items():
+            params: List[Any] = [subject]
+            query = """
+                SELECT id, subject, difficulty, question, options, correct_index, explanation, source_doc, source_page
+                FROM question_pool WHERE subject = ?
+            """
+            if seen_ids:
+                placeholders = ",".join("?" * len(seen_ids))
+                query += f" AND id NOT IN ({placeholders})"
+                params.extend(list(seen_ids))
+            query += " ORDER BY RANDOM() LIMIT ?"
+            params.append(count)
+
+            cur.execute(query, tuple(params))
+            for row in cur.fetchall():
+                q = dict(row)
+                try:
+                    opts = json.loads(q["options"])
+                    q["options"] = [o for o in opts if o is not None]
+                except Exception:
+                    q["options"] = []
+                all_questions.append(q)
+
+    _random.shuffle(all_questions)
+    return all_questions
+
+def log_diagnostic_answer(
+    db_path: Path,
+    session_id: str,
+    question_id: Optional[int],
+    selected_index: Optional[int],
+    is_correct: int
+) -> None:
+    with get_db_connection(db_path) as conn:
+        conn.execute(
+            "INSERT INTO diagnostic_answers (session_id, question_id, selected_index, is_correct) VALUES (?, ?, ?, ?)",
+            (session_id, question_id, selected_index, is_correct)
+        )
+        conn.commit()
+
+def complete_diagnostic_session(db_path: Path, session_id: str) -> Dict[str, Any]:
+    """Compute MIR-style score and mark session as completed."""
+    with get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT is_correct, selected_index FROM diagnostic_answers WHERE session_id = ?",
+            (session_id,)
+        )
+        rows = cur.fetchall()
+        correct = sum(1 for r in rows if r[0] == 1)
+        incorrect = sum(1 for r in rows if r[0] == 0 and r[1] is not None)
+        skipped = sum(1 for r in rows if r[1] is None)
+        # MIR scoring: +3 correct, -1 incorrect, 0 skipped
+        raw = correct * 3 - incorrect * 1
+        total_q = len(rows) if rows else 1
+        max_score = total_q * 3
+        mir_score = round(max(0, raw / max_score * 10), 2) if max_score > 0 else 0
+        conn.execute(
+            """
+            UPDATE diagnostic_sessions
+            SET correct_answers=?, incorrect_answers=?, skipped_answers=?,
+                mir_score=?, completed=1
+            WHERE id=?
+            """,
+            (correct, incorrect, skipped, mir_score, session_id)
+        )
+        conn.commit()
+        return {"correct": correct, "incorrect": incorrect, "skipped": skipped, "mir_score": mir_score}
+
+def get_diagnostic_results(db_path: Path, session_id: str, user_id: int) -> Optional[Dict[str, Any]]:
+    """Return full results for a diagnostic session: overall stats + per-subject breakdown."""
+    with get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT * FROM diagnostic_sessions WHERE id=? AND user_id=?",
+            (session_id, user_id)
+        )
+        session = cur.fetchone()
+        if not session:
+            return None
+        session = dict(session)
+
+        # Per-subject breakdown
+        cur.execute(
+            """
+            SELECT qp.subject,
+                   COUNT(*) as total,
+                   SUM(da.is_correct) as correct
+            FROM diagnostic_answers da
+            JOIN question_pool qp ON da.question_id = qp.id
+            WHERE da.session_id = ?
+            GROUP BY qp.subject
+            """,
+            (session_id,)
+        )
+        subjects = []
+        for row in cur.fetchall():
+            total = row[1]
+            correct = row[2] or 0
+            subjects.append({
+                "subject": row[0],
+                "total": total,
+                "correct": correct,
+                "incorrect": total - correct,
+                "percent": round(correct / total * 100, 1) if total > 0 else 0
+            })
+        session["subjects"] = subjects
+        return session
+
+def get_diagnostic_history(db_path: Path, user_id: int) -> List[Dict[str, Any]]:
+    """Return list of completed diagnostic sessions for the user, newest first."""
+    with get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT id, total_questions, correct_answers, incorrect_answers,
+                   skipped_answers, mir_score, created_at
+            FROM diagnostic_sessions
+            WHERE user_id=? AND completed=1
+            ORDER BY created_at DESC
+            """,
+            (user_id,)
+        )
+        return [dict(r) for r in cur.fetchall()]
+
+def get_diagnostic_weakness_subjects(db_path: Path, user_id: int) -> List[str]:
+    """Return subject filenames where the user performs worst (for adaptive boosting)."""
+    with get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT qp.subject,
+                   COUNT(*) as total,
+                   SUM(da.is_correct) as correct
+            FROM diagnostic_answers da
+            JOIN question_pool qp ON da.question_id = qp.id
+            JOIN diagnostic_sessions ds ON da.session_id = ds.id
+            WHERE ds.user_id=? AND ds.completed=1
+            GROUP BY qp.subject
+            HAVING total > 0
+            ORDER BY (CAST(correct AS REAL)/total) ASC
+            LIMIT 7
+            """,
+            (user_id,)
+        )
+        return [row[0] for row in cur.fetchall()]
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 def add_pool_question(db_path: Path, subject: str, difficulty: str, question: str, options: List[str], correct_index: int, explanation: str, source_doc: str, source_page: str) -> int:
     options_str = json.dumps(options)

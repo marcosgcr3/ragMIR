@@ -553,5 +553,81 @@ async def get_test_stats(user: dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al recuperar estadísticas de test: {str(e)}")
 
+# --- DIAGNOSTIC ENDPOINTS ---
+
+@app.get("/diagnostic", response_class=HTMLResponse)
+async def read_diagnostic():
+    diag_file = STATIC_DIR / "diagnostic.html"
+    if not diag_file.exists():
+        raise HTTPException(status_code=404, detail="diagnostic.html no encontrado.")
+    return diag_file.read_text(encoding="utf-8")
+
+@app.post("/api/diagnostic/start")
+async def start_diagnostic(user: dict = Depends(get_current_user)):
+    """Start a new diagnostic session with 50 adaptive questions."""
+    import uuid as _uuid
+    session_id = _uuid.uuid4().hex
+
+    # Automatically find weakest subjects from history
+    weak_subjects = database.get_diagnostic_weakness_subjects(config.DEFAULT_DB_PATH, user["id"])
+
+    questions = database.get_diagnostic_questions(
+        config.DEFAULT_DB_PATH,
+        user["id"],
+        extra_subjects=weak_subjects
+    )
+
+    if not questions:
+        raise HTTPException(status_code=400, detail="No hay preguntas disponibles en el banco.")
+
+    database.create_diagnostic_session(
+        config.DEFAULT_DB_PATH, user["id"], session_id, len(questions)
+    )
+
+    return {"session_id": session_id, "questions": questions}
+
+@app.post("/api/diagnostic/answer")
+async def save_diagnostic_answer(
+    session_id: str = Form(...),
+    question_id: int = Form(...),
+    selected_index: int = Form(-1),  # -1 = skipped
+    is_correct: int = Form(...),
+    user: dict = Depends(get_current_user)
+):
+    """Save a single answer for a diagnostic session."""
+    sel = None if selected_index == -1 else selected_index
+    database.log_diagnostic_answer(
+        config.DEFAULT_DB_PATH, session_id, question_id, sel, is_correct
+    )
+    return {"message": "Respuesta guardada."}
+
+@app.post("/api/diagnostic/complete")
+async def complete_diagnostic(
+    session_id: str = Form(...),
+    user: dict = Depends(get_current_user)
+):
+    """Complete the diagnostic session and calculate MIR score."""
+    result = database.complete_diagnostic_session(config.DEFAULT_DB_PATH, session_id)
+    return result
+
+@app.get("/api/diagnostic/results/{session_id}")
+async def get_diagnostic_results(session_id: str, user: dict = Depends(get_current_user)):
+    """Get full results for a diagnostic session."""
+    results = database.get_diagnostic_results(config.DEFAULT_DB_PATH, session_id, user["id"])
+    if not results:
+        raise HTTPException(status_code=404, detail="Sesión de diagnóstico no encontrada.")
+
+    # Map subject filenames to readable names
+    for s in results.get("subjects", []):
+        s["name"] = config.MANUAL_NAMES.get(s["subject"], s["subject"].replace(".pdf", ""))
+
+    return results
+
+@app.get("/api/diagnostic/history")
+async def get_diagnostic_history(user: dict = Depends(get_current_user)):
+    """Get history of all completed diagnostic sessions for the user."""
+    history = database.get_diagnostic_history(config.DEFAULT_DB_PATH, user["id"])
+    return {"history": history}
+
 # Mount static folder
 app.mount("/static", StaticFiles(directory="static"), name="static")
