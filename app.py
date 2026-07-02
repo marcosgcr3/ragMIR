@@ -418,33 +418,14 @@ def generate_and_save_question(subject_filter: str, difficulty: str) -> dict:
         print(f"Error generating question via Gemini: {err}")
         raise HTTPException(status_code=500, detail="Error al generar preguntas dinámicas mediante Gemini.")
 
-def background_generate_questions(subject_filter: str, difficulty: str, count: int):
-    """Generate new questions in the background to grow the pool without slowing down tests."""
-    for _ in range(count):
-        try:
-            subj_filter = subject_filter
-            if subject_filter == "All":
-                status = vector_store.get_database_status(config.DEFAULT_DB_PATH)
-                files = list(status.get("files", {}).keys())
-                if files:
-                    subj_filter = random.choice(files)
-                else:
-                    print("[Background] No files indexed. Cannot generate new questions.")
-                    break
-            generate_and_save_question(subj_filter, difficulty)
-            print(f"[Background] Successfully generated and stored a new question for {subj_filter} ({difficulty}).")
-        except Exception as e:
-            print(f"[Background] Error generating question: {e}")
-
 @app.post("/api/tests/start")
 async def start_test_session(
-    background_tasks: BackgroundTasks,
     subject: str = Form(...),
     difficulty: str = Form(...),
     total_questions: int = Form(...),
     user: dict = Depends(get_current_user)
 ):
-    """Start a test session, load questions instantly, and generate new pool questions asynchronously."""
+    """Start a test session, load stored questions instantly, and prepare background AI question loading."""
     test_id = str(int(random.random() * 1000000000))
     
     # 1. Create the session in the DB
@@ -457,42 +438,36 @@ async def start_test_session(
         total_questions
     )
     
-    # 2. Get existing questions from pool up to the requested count
+    # 2. We want to load most questions from the stored pool to start instantly (80%),
+    # leaving the remaining 20% to be generated dynamically in the background.
+    forced_new = max(1, min(total_questions, int(total_questions * 0.2)))
+    max_from_pool = total_questions - forced_new
+    
     questions = database.get_pool_questions(
         config.DEFAULT_DB_PATH, 
         user["id"], 
         subject, 
         difficulty, 
-        total_questions
+        max_from_pool
     )
     
-    # 3. Check if we have enough questions in the database
-    needed = total_questions - len(questions)
-    if needed <= 0:
-        # We have enough questions! Respond instantly and queue background generation of new questions
-        # This keeps the pool growing without making the user wait.
-        forced_new_count = max(1, min(3, int(total_questions * 0.2)))
-        background_tasks.add_task(background_generate_questions, subject, difficulty, forced_new_count)
-    else:
-        # If we don't have enough, generate the missing questions synchronously
-        print(f"Pool only had {len(questions)}/{total_questions} questions. Generating {needed} synchronously...")
-        for _ in range(needed):
-            try:
-                subj_filter = subject
-                if subject == "All":
-                    status = vector_store.get_database_status(config.DEFAULT_DB_PATH)
-                    files = list(status.get("files", {}).keys())
-                    if files:
-                        subj_filter = random.choice(files)
-                    else:
-                        print("Sync generation fallback: No files indexed in vector store.")
-                        break
-                        
+    # 3. If there are no questions at all in the pool, try to fetch/generate at least 1 synchronously to avoid failure
+    if not questions:
+        try:
+            subj_filter = subject
+            if subject == "All":
+                status = vector_store.get_database_status(config.DEFAULT_DB_PATH)
+                files = list(status.get("files", {}).keys())
+                if files:
+                    subj_filter = random.choice(files)
+                else:
+                    print("No files indexed. Cannot generate fallback question.")
+            if subj_filter != "All" or files:
                 new_q = generate_and_save_question(subj_filter, difficulty)
                 questions.append(new_q)
-            except Exception as e:
-                print(f"Error generating question synchronously: {e}")
-                
+        except Exception as e:
+            print(f"Error generating fallback question synchronously: {e}")
+            
     if not questions:
         raise HTTPException(
             status_code=400, 
@@ -501,6 +476,43 @@ async def start_test_session(
         
     return {
         "test_session_id": test_id,
+        "questions": questions
+    }
+
+@app.post("/api/tests/fetch_remaining")
+async def fetch_remaining_questions(
+    test_session_id: str = Form(...),
+    current_count: int = Form(...),
+    user: dict = Depends(get_current_user)
+):
+    """Generate and return the remaining questions for the test session in the background."""
+    session = database.get_test_session(config.DEFAULT_DB_PATH, test_session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Sesión de test no encontrada.")
+        
+    total_q = session["total_questions"]
+    needed = total_q - current_count
+    
+    questions = []
+    if needed > 0:
+        for _ in range(needed):
+            try:
+                subj_filter = session["subject"]
+                if subj_filter == "All":
+                    status = vector_store.get_database_status(config.DEFAULT_DB_PATH)
+                    files = list(status.get("files", {}).keys())
+                    if files:
+                        subj_filter = random.choice(files)
+                    else:
+                        print("Background fetch generation fallback: No files indexed in vector store.")
+                        break
+                        
+                new_q = generate_and_save_question(subj_filter, session["difficulty"])
+                questions.append(new_q)
+            except Exception as e:
+                print(f"Error generating question in background fetch: {e}")
+                
+    return {
         "questions": questions
     }
 

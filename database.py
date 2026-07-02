@@ -289,6 +289,15 @@ def create_test_session(db_path: Path, user_id: int, test_id: str, subject: str,
         )
         conn.commit()
 
+def get_test_session(db_path: Path, test_session_id: str) -> Optional[Dict[str, Any]]:
+    with get_db_connection(db_path) as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, user_id, subject, difficulty, total_questions FROM test_sessions WHERE id = ?", (test_session_id,))
+        row = cur.fetchone()
+        if row:
+            return dict(row)
+    return None
+
 def log_test_answer(db_path: Path, test_session_id: str, question_id: int, is_correct: int) -> None:
     with get_db_connection(db_path) as conn:
         conn.execute(

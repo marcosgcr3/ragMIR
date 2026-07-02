@@ -231,6 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 testScore = 0;
                 
                 showQuestion();
+
+                // Start background fetching of remaining questions (forced 20% AI questions)
+                if (testQuestions.length < testTotalQuestions) {
+                    fetchRemainingQuestions(testSessionId, testQuestions.length);
+                }
             } else {
                 const errData = await startRes.json();
                 alert("Error al iniciar el examen: " + (errData.detail || "Fallo en el servidor."));
@@ -249,13 +254,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Helper: fetch remaining AI questions asynchronously in the background
+    async function fetchRemainingQuestions(sessionId, currentCount) {
+        try {
+            const formData = new FormData();
+            formData.append('test_session_id', sessionId);
+            formData.append('current_count', currentCount);
+            
+            const res = await fetch('/api/tests/fetch_remaining', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                const newQuestions = data.questions || [];
+                if (newQuestions.length > 0) {
+                    // Append remaining questions to the end of array
+                    testQuestions = testQuestions.concat(newQuestions);
+                    console.log(`Cargadas ${newQuestions.length} preguntas de IA en segundo plano.`);
+                }
+            }
+        } catch (e) {
+            console.error("Error fetching remaining questions in background:", e);
+        }
+    }
+
     // Render the current batch question from memory (zero lag!)
     function showQuestion() {
         hasAnsweredCurrent = false;
         explanationCard.style.display = 'none';
         
         currentQuestion = testQuestions[testCurrentIndex - 1];
-        if (!currentQuestion) return;
+        if (!currentQuestion) {
+            // Display loading screen if background fetch is still in progress
+            questionSubject.textContent = "Cargando...";
+            questionText.innerHTML = '<span class="loading-pulse">Cargando la siguiente pregunta de la IA... <i class="fa-solid fa-spinner fa-spin"></i></span>';
+            optionsList.innerHTML = '';
+            setTimeout(showQuestion, 500); // Retry in 500ms
+            return;
+        }
         
         // Update Progress Bar UI
         progressText.textContent = `Pregunta ${testCurrentIndex} de ${testTotalQuestions}`;
