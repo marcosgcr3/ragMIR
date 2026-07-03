@@ -188,7 +188,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     sessions = JSON.parse(cachedSessions);
                     if (sessions.length > 0) {
-                        currentSessionId = sessions[0].id;
+                        const savedActiveId = sessionStorage.getItem('activeSessionId');
+                        if (savedActiveId && sessions.some(s => s.id === savedActiveId)) {
+                            currentSessionId = savedActiveId;
+                        } else {
+                            currentSessionId = sessions[0].id;
+                        }
                         renderSessionsList();
                         loadCurrentSessionMessages(true);
                     }
@@ -208,7 +213,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sessions.length === 0) {
                 await createNewSession();
             } else {
-                if (!currentSessionId || !sessions.some(s => s.id === currentSessionId)) {
+                const savedActiveId = sessionStorage.getItem('activeSessionId');
+                if (savedActiveId && sessions.some(s => s.id === savedActiveId)) {
+                    currentSessionId = savedActiveId;
+                } else if (!currentSessionId || !sessions.some(s => s.id === currentSessionId)) {
                     currentSessionId = sessions[0].id;
                 }
                 renderSessionsList();
@@ -241,6 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.setItem('chatSessions', JSON.stringify(sessions));
                 sessionStorage.setItem(`sessionMessages_${newId}`, JSON.stringify([]));
                 currentSessionId = newId;
+                sessionStorage.setItem('activeSessionId', newId);
                 renderSessionsList();
                 renderChatMessages();
             }
@@ -270,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     if (currentSessionId === id) {
                         currentSessionId = sessions[0].id;
+                        sessionStorage.setItem('activeSessionId', currentSessionId);
                         loadCurrentSessionMessages(true);
                         await loadCurrentSessionMessages(false);
                     }
@@ -282,6 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function selectSession(id) {
         currentSessionId = id;
+        sessionStorage.setItem('activeSessionId', id);
         btnRemoveImage.click(); // Reset attached images
         renderSessionsList();
         loadCurrentSessionMessages(true);

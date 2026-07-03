@@ -555,34 +555,50 @@ const DiagApp = (() => {
     }
 
     async function renderHistoryChart() {
+        // SWR: Load from cache instantly
+        const cachedHistory = sessionStorage.getItem('diagnosticHistory');
+        if (cachedHistory) {
+            try {
+                const history = JSON.parse(cachedHistory).reverse();
+                renderChartWithData(history);
+            } catch (e) {
+                sessionStorage.removeItem('diagnosticHistory');
+            }
+        }
+
         try {
             const res = await fetch('/api/diagnostic/history');
             const data = await res.json();
             const history = (data.history || []).reverse();
-            if (history.length < 2) { document.getElementById('progress-section').style.display = 'none'; return; }
-            document.getElementById('progress-section').style.display = 'block';
-            const ctx = document.getElementById('history-chart').getContext('2d');
-            if (historyChart) historyChart.destroy();
-            historyChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: history.map((_,i) => `Test ${i+1}`),
-                    datasets: [{
-                        label: 'Nota MIR', data: history.map(h => parseFloat(h.mir_score||0)),
-                        borderColor:'#a855f7', backgroundColor:'rgba(168,85,247,0.12)',
-                        fill:true, tension:0.4, pointBackgroundColor:'#a855f7', pointRadius:5, pointHoverRadius:7,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y:{ min:0, max:10, ticks:{color:'#64748b',font:{size:11}}, grid:{color:'rgba(255,255,255,0.06)'}},
-                        x:{ ticks:{color:'#64748b',font:{size:11}}, grid:{color:'rgba(255,255,255,0.04)'}}
-                    },
-                    plugins: { legend:{display:false}, tooltip:{callbacks:{label: c => ` ${c.raw.toFixed(1)} / 10`}} }
-                }
-            });
+            sessionStorage.setItem('diagnosticHistory', JSON.stringify(data.history || []));
+            renderChartWithData(history);
         } catch (e) { console.warn('History chart error:', e); }
+    }
+
+    function renderChartWithData(history) {
+        if (history.length < 2) { document.getElementById('progress-section').style.display = 'none'; return; }
+        document.getElementById('progress-section').style.display = 'block';
+        const ctx = document.getElementById('history-chart').getContext('2d');
+        if (historyChart) historyChart.destroy();
+        historyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: history.map((_,i) => `Test ${i+1}`),
+                datasets: [{
+                    label: 'Nota MIR', data: history.map(h => parseFloat(h.mir_score||0)),
+                    borderColor:'#a855f7', backgroundColor:'rgba(168,85,247,0.12)',
+                    fill:true, tension:0.4, pointBackgroundColor:'#a855f7', pointRadius:5, pointHoverRadius:7,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y:{ min:0, max:10, ticks:{color:'#64748b',font:{size:11}}, grid:{color:'rgba(255,255,255,0.06)'}},
+                    x:{ ticks:{color:'#64748b',font:{size:11}}, grid:{color:'rgba(255,255,255,0.04)'}}
+                },
+                plugins: { legend:{display:false}, tooltip:{callbacks:{label: c => ` ${c.raw.toFixed(1)} / 10`}} }
+            }
+        });
     }
 
     return { init, start, answer, skip, next, showWelcome, viewResults };
