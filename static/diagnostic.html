@@ -382,6 +382,49 @@
                 </div>
 
                 <div class="results-section">
+                    <h3><i class="fa-solid fa-gauge-high"></i> Estimación de Rango y Rendimiento Nacional</h3>
+                    <div class="charts-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+                        <div class="chart-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px;">
+                            <h4 style="margin-bottom: 8px;">Preguntas Netas Estimadas</h4>
+                            <div style="font-size: 2.8rem; font-weight: 800; font-family: 'Outfit', sans-serif; color: var(--accent-blue); margin-top: 10px;" id="estim-netas">0.0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Fórmula MIR: Aciertos - (Errores / 3) sobre 200 preguntas</div>
+                        </div>
+                        <div class="chart-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px;">
+                            <h4 style="margin-bottom: 8px;">Nº de Orden Estimado (Ranking)</h4>
+                            <div style="font-size: 2.0rem; font-weight: 800; font-family: 'Outfit', sans-serif; color: #ff9100; margin-top: 15px;" id="estim-ranking"># 9.000+</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;" id="estim-ranking-desc">Percentil estimado: -</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results-section">
+                    <h3><i class="fa-solid fa-list-check"></i> Matriz de Prioridad de Estudio</h3>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h4 style="color: var(--diag-red);">Especialidades Críticas (Prioridad Alta)</h4>
+                            <div id="priority-critical" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                                <!-- Dynamically loaded -->
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h4 style="color: var(--diag-green);">Materias en Mantenimiento (Prioridad Baja)</h4>
+                            <div id="priority-maintenance" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                                <!-- Dynamically loaded -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results-section">
+                    <h3><i class="fa-solid fa-graduation-cap"></i> Recomendaciones del Tutor de Inteligencia RAG</h3>
+                    <div class="chart-card" style="background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(0,242,254,0.05)); border-color: rgba(124,58,237,0.25);">
+                        <ul id="tutor-recommendations" style="padding-left: 20px; color: #cbd5e1; font-size: 0.9rem; line-height: 1.8; margin-top: 10px;">
+                            <!-- Dynamically loaded -->
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="results-section">
                     <h3><i class="fa-solid fa-chart-radar"></i> Rendimiento por especialidad</h3>
                     <div class="charts-grid">
                         <div class="chart-card"><h4>Radar por especialidad</h4><canvas id="radar-chart" height="260"></canvas></div>

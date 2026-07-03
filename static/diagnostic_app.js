@@ -283,6 +283,51 @@ const DiagApp = (() => {
             document.getElementById('res-pct').textContent = pct + '%';
             document.getElementById('header-subtitle').textContent = `Nota MIR: ${score.toFixed(1)} / 10 · ${pct}% aciertos`;
 
+            // Calculate MIR Net Questions out of 200 expected questions
+            const expectedCorrect = 200 * (correct / total);
+            const expectedIncorrect = 200 * (incorrect / total);
+            const netScore = Math.max(0, expectedCorrect - (expectedIncorrect / 3));
+            document.getElementById('estim-netas').textContent = netScore.toFixed(1) + ' netas';
+
+            // Calculate National Ranking order prediction
+            let rankingText = "# 10.000+";
+            let rankColor = "#ef4444";
+            let pctText = "Percentil estimado: < 15%";
+            if (netScore >= 165) {
+                rankingText = "# 1 - 250";
+                rankColor = "#00e676";
+                pctText = "Percentil estimado: ~99% (Excelente, plaza asegurada de tu elección)";
+            } else if (netScore >= 150) {
+                rankingText = "# 250 - 900";
+                rankColor = "#00f2fe";
+                pctText = "Percentil estimado: ~95% (Sobresaliente, acceso a especialidades altamente cotizadas)";
+            } else if (netScore >= 135) {
+                rankingText = "# 900 - 2.000";
+                rankColor = "#8c52ff";
+                pctText = "Percentil estimado: ~88% (Muy bueno, alta probabilidad para la mayoría de especialidades)";
+            } else if (netScore >= 120) {
+                rankingText = "# 2.000 - 3.500";
+                rankColor = "#eab308";
+                pctText = "Percentil estimado: ~75% (Bueno, opciones competitivas en múltiples hospitales)";
+            } else if (netScore >= 105) {
+                rankingText = "# 3.500 - 5.500";
+                rankColor = "#ff9100";
+                pctText = "Percentil estimado: ~60% (Media nacional, múltiples opciones disponibles)";
+            } else if (netScore >= 90) {
+                rankingText = "# 5.500 - 8.000";
+                rankColor = "#ff3d00";
+                pctText = "Percentil estimado: ~40% (Acceso a plazas de medicina familiar y comunitarias)";
+            } else {
+                rankingText = "# 8.000+";
+                rankColor = "#ef4444";
+                pctText = "Percentil estimado: < 25% (Riesgo de no obtener plaza. ¡Es hora de intensificar el estudio!)";
+            }
+
+            const rankingEl = document.getElementById('estim-ranking');
+            rankingEl.textContent = rankingText;
+            rankingEl.style.color = rankColor;
+            document.getElementById('estim-ranking-desc').textContent = pctText;
+
             // Score ring
             const ringEl = document.getElementById('score-ring');
             const color = score >= 7 ? '#22c55e' : score >= 5 ? '#eab308' : '#ef4444';
@@ -299,6 +344,8 @@ const DiagApp = (() => {
             renderSubjectBars(subjects);
             renderRadarChart(subjects);
             renderStrengthsWeaknesses(subjects);
+            renderPriorityMatrix(subjects);
+            renderTutorRecommendations(subjects, correct, incorrect, skipped);
             await renderHistoryChart();
 
             showScreen('screen-results');
@@ -370,6 +417,96 @@ const DiagApp = (() => {
 
         document.getElementById('strengths-list').innerHTML = toHtml(sorted.slice(0,3), p => p>=70?'#22c55e':'#eab308');
         document.getElementById('weaknesses-list').innerHTML = toHtml([...sorted].reverse().slice(0,3), p => p<50?'#ef4444':'#eab308');
+    }
+
+    function renderPriorityMatrix(subjects) {
+        const highWeightFiles = [
+            "CD.pdf", "NR.pdf", "DG.pdf", "PD.pdf", "GC.pdf",
+            "ED.pdf", "TM.pdf", "IF.pdf", "NF.pdf", "NM.pdf", "HM.pdf"
+        ];
+        
+        const criticalEl = document.getElementById('priority-critical');
+        const maintenanceEl = document.getElementById('priority-maintenance');
+        
+        let criticalHtml = "";
+        let maintenanceHtml = "";
+        
+        let criticalCount = 0;
+        let maintenanceCount = 0;
+        
+        subjects.forEach(s => {
+            const isHighWeight = highWeightFiles.includes(s.subject);
+            if (isHighWeight) {
+                const name = s.name || MANUAL_NAMES[s.subject] || s.subject?.replace('.pdf', '');
+                const pct = s.percent || 0;
+                
+                if (pct < 65) {
+                    criticalCount++;
+                    criticalHtml += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); padding: 8px 12px; border-radius: 8px; margin-bottom: 4px;">
+                            <span style="font-size:0.85rem; color:#cbd5e1; font-weight:500;">${name}</span>
+                            <span style="font-size:0.75rem; background:var(--diag-red); color:#fff; padding: 2px 8px; border-radius: 100px; font-weight: 600;">${pct}%</span>
+                        </div>`;
+                } else {
+                    maintenanceCount++;
+                    maintenanceHtml += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.15); padding: 8px 12px; border-radius: 8px; margin-bottom: 4px;">
+                            <span style="font-size:0.85rem; color:#cbd5e1; font-weight:500;">${name}</span>
+                            <span style="font-size:0.75rem; background:var(--diag-green); color:#fff; padding: 2px 8px; border-radius: 100px; font-weight: 600;">${pct}%</span>
+                        </div>`;
+                }
+            }
+        });
+        
+        if (criticalCount === 0) {
+            criticalEl.innerHTML = '<p style="color:#64748b; font-size:0.82rem; font-style:italic; padding: 8px;">¡Excelente! No tienes materias de alto peso en zona crítica.</p>';
+        } else {
+            criticalEl.innerHTML = criticalHtml;
+        }
+        
+        if (maintenanceCount === 0) {
+            maintenanceEl.innerHTML = '<p style="color:#64748b; font-size:0.82rem; font-style:italic; padding: 8px;">No hay materias en mantenimiento de alto peso todavía.</p>';
+        } else {
+            maintenanceEl.innerHTML = maintenanceHtml;
+        }
+    }
+
+    function renderTutorRecommendations(subjects, correct, incorrect, skipped) {
+        const recEl = document.getElementById('tutor-recommendations');
+        const recs = [];
+        
+        const highWeightFiles = [
+            "CD.pdf", "NR.pdf", "DG.pdf", "PD.pdf", "GC.pdf",
+            "ED.pdf", "TM.pdf", "IF.pdf", "NF.pdf", "NM.pdf", "HM.pdf"
+        ];
+        
+        // Find weakest and strongest high weight subjects
+        const criticalSubjects = subjects.filter(s => highWeightFiles.includes(s.subject) && (s.percent || 0) < 65);
+        const strongSubjects = subjects.filter(s => highWeightFiles.includes(s.subject) && (s.percent || 0) >= 80);
+        
+        if (criticalSubjects.length > 0) {
+            criticalSubjects.sort((a,b) => a.percent - b.percent); // ASCENDING (lowest first)
+            const worst = criticalSubjects[0];
+            const name = worst.name || MANUAL_NAMES[worst.subject] || worst.subject?.replace('.pdf', '');
+            recs.push(`<strong>Prioridad de Estudio Urgente:</strong> Se ha detectado un rendimiento bajo (${worst.percent}%) en <strong>${name}</strong>. Esta materia tiene un peso crítico en el examen real. Concéntrate en leer sus manuales CTO en la biblioteca RAG.`);
+        }
+        
+        if (strongSubjects.length > 0) {
+            strongSubjects.sort((a,b) => b.percent - a.percent); // DESCENDING (highest first)
+            const best = strongSubjects[0];
+            const name = best.name || MANUAL_NAMES[best.subject] || best.subject?.replace('.pdf', '');
+            recs.push(`<strong>Dominio Destacado:</strong> ¡Excelente trabajo en <strong>${name}</strong>! Tienes una precisión de ${best.percent}%. Puedes programar repasos más espaciados para esta materia y optimizar tu tiempo.`);
+        }
+        
+        if (skipped > 8) {
+            recs.push(`<strong>Estrategia de Examen (Omitidas):</strong> Has dejado en blanco ${skipped} preguntas. En el examen MIR, la penalización de un error (-1) frente a una correcta (+3) hace que estadísticamente convenga arriesgarse si consigues descartar 2 de las 4 opciones.`);
+        } else if (incorrect > correct) {
+            recs.push(`<strong>Estrategia de Precisión (Errores):</strong> Tienes más fallos que aciertos. Intenta leer con mayor atención los enunciados (especialmente las preguntas en negativo "Señala la INCORRECTA") y no te precipites al responder.`);
+        }
+        
+        recs.push(`<strong>Recomendación General:</strong> Dirígete al <strong>Simulador de Tests</strong> para crear un examen personalizado enfocado exclusivamente en las asignaturas donde tu rendimiento fue menor al 65%.`);
+        
+        recEl.innerHTML = recs.map(r => `<li style="margin-bottom: 8px;">${r}</li>`).join('');
     }
 
     async function renderHistoryChart() {
