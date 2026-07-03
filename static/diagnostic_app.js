@@ -38,10 +38,10 @@ const DiagApp = (() => {
         }
     }
 
-    function showWelcome() {
+    function showWelcome(useCache = false) {
         showScreen('screen-welcome');
         document.getElementById('header-subtitle').textContent = '50 preguntas adaptativas · Sistema de puntuación MIR (+3 / -1)';
-        loadSidebarHistory();
+        loadSidebarHistory(useCache);
     }
 
     // ── Auth & init ───────────────────────────────────────────────────────
@@ -50,6 +50,7 @@ const DiagApp = (() => {
         const logoutBtn = document.getElementById('btn-logout');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {
+                sessionStorage.clear(); // Clear cache on logout
                 await fetch('/api/auth/logout', { method: 'POST' });
                 window.location.href = '/';
             });
@@ -75,64 +76,108 @@ const DiagApp = (() => {
             });
         }
 
+        // SWR: Load cached user instantly
+        const cachedUser = sessionStorage.getItem('currentUser');
+        if (cachedUser) {
+            try {
+                const user = JSON.parse(cachedUser);
+                document.getElementById('user-display-name').textContent = user.username || '—';
+                document.getElementById('user-profile').style.display = 'flex';
+                showWelcome(true); // Load history from cache instantly
+            } catch (e) {
+                sessionStorage.removeItem('currentUser');
+            }
+        }
+
+        // Background authentication check
+        let authenticatedUser = null;
         try {
             const res = await fetch('/api/auth/me');
             if (!res.ok) {
+                sessionStorage.clear();
                 document.getElementById('login-overlay').style.display = 'flex';
                 return;
             }
-            const user = await res.json();
-            document.getElementById('user-display-name').textContent = user.username || '—';
+            authenticatedUser = await res.json();
+            sessionStorage.setItem('currentUser', JSON.stringify(authenticatedUser));
+            document.getElementById('user-display-name').textContent = authenticatedUser.username || '—';
             document.getElementById('user-profile').style.display = 'flex';
         } catch {
-            document.getElementById('login-overlay').style.display = 'flex';
-            return;
+            if (!cachedUser) {
+                document.getElementById('login-overlay').style.display = 'flex';
+                return;
+            }
         }
-        await afterLogin();
+
+        if (!cachedUser) {
+            await afterLogin();
+        } else {
+            // Revalidate history in background
+            loadSidebarHistory(false);
+        }
     }
 
     async function afterLogin() {
-        // Re-read user
         try {
             const res = await fetch('/api/auth/me');
             if (res.ok) {
                 const user = await res.json();
+                sessionStorage.setItem('currentUser', JSON.stringify(user));
                 document.getElementById('user-display-name').textContent = user.username || '—';
                 document.getElementById('user-profile').style.display = 'flex';
             }
         } catch {}
-        showWelcome();
+        showWelcome(false);
     }
 
     // ── Sidebar history ───────────────────────────────────────────────────
-    async function loadSidebarHistory() {
+    async function loadSidebarHistory(useCache = false) {
+        const el = document.getElementById('sidebar-history-list');
+        if (!el) return;
+
+        if (useCache) {
+            const cachedHistory = sessionStorage.getItem('diagnosticHistory');
+            if (cachedHistory) {
+                try {
+                    const history = JSON.parse(cachedHistory);
+                    renderHistoryList(history, el);
+                } catch (e) {
+                    sessionStorage.removeItem('diagnosticHistory');
+                }
+            }
+        }
+
         try {
             const res = await fetch('/api/diagnostic/history');
             const data = await res.json();
             const history = data.history || [];
-            const el = document.getElementById('sidebar-history-list');
-            if (!el) return;
+            sessionStorage.setItem('diagnosticHistory', JSON.stringify(history));
+            renderHistoryList(history, el);
+        } catch (e) {
+            console.warn('Error loading sidebar history:', e);
+        }
+    }
 
-            if (history.length === 0) {
-                el.innerHTML = '<p class="empty-list" style="font-size:11px;">Aún no has hecho ningún diagnóstico.</p>';
-                return;
-            }
+    function renderHistoryList(history, el) {
+        if (history.length === 0) {
+            el.innerHTML = '<p class="empty-list" style="font-size:11px;">Aún no has hecho ningún diagnóstico.</p>';
+            return;
+        }
 
-            el.innerHTML = history.slice(0, 10).map((h, idx) => {
-                const score = parseFloat(h.mir_score);
-                const cls = score >= 7 ? 'score-good' : score >= 5 ? 'score-mid' : 'score-bad';
-                const date = new Date(h.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-                const pct = h.total_questions > 0 ? Math.round(h.correct_answers / h.total_questions * 100) : 0;
-                return `
-                    <div class="diag-hist-item" onclick="DiagApp.viewResults('${h.id}')">
-                        <div>
-                            <div class="diag-hist-date">Test ${history.length - idx} · ${date}</div>
-                            <div style="font-size:0.75rem;color:#475569;margin-top:2px">${pct}% aciertos</div>
-                        </div>
-                        <div class="diag-hist-score ${cls}">${score.toFixed(1)}<span style="font-size:0.7rem;color:#64748b"> /10</span></div>
-                    </div>`;
-            }).join('');
-        } catch (e) { console.warn('Error loading sidebar history:', e); }
+        el.innerHTML = history.slice(0, 10).map((h, idx) => {
+            const score = parseFloat(h.mir_score);
+            const cls = score >= 7 ? 'score-good' : score >= 5 ? 'score-mid' : 'score-bad';
+            const date = new Date(h.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+            const pct = h.total_questions > 0 ? Math.round(h.correct_answers / h.total_questions * 100) : 0;
+            return `
+                <div class="diag-hist-item" onclick="DiagApp.viewResults('${h.id}')">
+                    <div>
+                        <div class="diag-hist-date">Test ${history.length - idx} · ${date}</div>
+                        <div style="font-size:0.75rem;color:#475569;margin-top:2px">${pct}% aciertos</div>
+                    </div>
+                    <div class="diag-hist-score ${cls}">${score.toFixed(1)}<span style="font-size:0.7rem;color:#64748b"> /10</span></div>
+                </div>`;
+        }).join('');
     }
 
     // ── Start new diagnostic ──────────────────────────────────────────────

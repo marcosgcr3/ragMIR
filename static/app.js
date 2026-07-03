@@ -86,17 +86,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check session on load
     async function checkAuthStatus() {
+        const cachedUser = sessionStorage.getItem('currentUser');
+        if (cachedUser) {
+            try {
+                currentUser = JSON.parse(cachedUser);
+                showAuthenticatedUI(currentUser.username, true);
+            } catch (e) {
+                sessionStorage.removeItem('currentUser');
+            }
+        }
+
         try {
             const res = await fetch('/api/auth/me');
             if (res.ok) {
                 currentUser = await res.json();
-                showAuthenticatedUI(currentUser.username);
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showAuthenticatedUI(currentUser.username, false);
             } else {
+                sessionStorage.clear();
                 showLoginUI();
             }
         } catch (err) {
             console.error("Auth check failed:", err);
-            showLoginUI();
+            if (!cachedUser) {
+                showLoginUI();
+            }
         }
     }
 
@@ -105,14 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
         userProfile.style.display = 'none';
     }
 
-    function showAuthenticatedUI(username) {
+    function showAuthenticatedUI(username, useCache = false) {
         loginOverlay.style.display = 'none';
         userDisplayName.textContent = username;
         userProfile.style.display = 'flex';
         
         // Initialize App data
-        loadSessions();
-        checkDatabaseStatus();
+        loadSessions(useCache);
+        checkDatabaseStatus(useCache);
     }
 
     // Login Form handler
@@ -136,7 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const data = await res.json();
                 loginPassword.value = '';
-                showAuthenticatedUI(data.username);
+                sessionStorage.setItem('currentUser', JSON.stringify(data));
+                showAuthenticatedUI(data.username, false);
             } else {
                 const errorData = await res.json();
                 loginError.textContent = errorData.detail || "Error al iniciar sesión.";
@@ -152,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Logout Handler
     btnLogout.addEventListener('click', async () => {
         try {
+            sessionStorage.clear();
             await fetch('/api/auth/logout', { method: 'POST' });
             currentUser = null;
             sessions = [];
@@ -165,18 +181,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Server-side Session Management
-    async function loadSessions() {
+    async function loadSessions(useCache = false) {
+        if (useCache) {
+            const cachedSessions = sessionStorage.getItem('chatSessions');
+            if (cachedSessions) {
+                try {
+                    sessions = JSON.parse(cachedSessions);
+                    if (sessions.length > 0) {
+                        currentSessionId = sessions[0].id;
+                        renderSessionsList();
+                        loadCurrentSessionMessages(true);
+                    }
+                } catch (e) {
+                    sessionStorage.removeItem('chatSessions');
+                }
+            }
+        }
+
         try {
             const res = await fetch('/api/sessions');
             if (!res.ok) throw new Error();
-            sessions = await res.json();
+            const freshSessions = await res.json();
+            sessionStorage.setItem('chatSessions', JSON.stringify(freshSessions));
             
+            sessions = freshSessions;
             if (sessions.length === 0) {
                 await createNewSession();
             } else {
-                currentSessionId = sessions[0].id;
+                if (!currentSessionId || !sessions.some(s => s.id === currentSessionId)) {
+                    currentSessionId = sessions[0].id;
+                }
                 renderSessionsList();
-                await loadCurrentSessionMessages();
+                await loadCurrentSessionMessages(false);
             }
         } catch (e) {
             console.error("Error loading sessions from server:", e);
@@ -202,6 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (res.ok) {
                 sessions.unshift(newSession);
+                sessionStorage.setItem('chatSessions', JSON.stringify(sessions));
+                sessionStorage.setItem(`sessionMessages_${newId}`, JSON.stringify([]));
                 currentSessionId = newId;
                 renderSessionsList();
                 renderChatMessages();
@@ -223,14 +261,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (res.ok) {
+                sessionStorage.removeItem(`sessionMessages_${id}`);
                 sessions = sessions.filter(s => s.id !== id);
+                sessionStorage.setItem('chatSessions', JSON.stringify(sessions));
                 renderSessionsList();
                 if (sessions.length === 0) {
                     await createNewSession();
                 } else {
                     if (currentSessionId === id) {
                         currentSessionId = sessions[0].id;
-                        await loadCurrentSessionMessages();
+                        loadCurrentSessionMessages(true);
+                        await loadCurrentSessionMessages(false);
                     }
                 }
             }
@@ -243,17 +284,35 @@ document.addEventListener('DOMContentLoaded', () => {
         currentSessionId = id;
         btnRemoveImage.click(); // Reset attached images
         renderSessionsList();
-        await loadCurrentSessionMessages();
+        loadCurrentSessionMessages(true);
+        await loadCurrentSessionMessages(false);
     }
 
-    async function loadCurrentSessionMessages() {
+    async function loadCurrentSessionMessages(useCache = false) {
         const currentSession = sessions.find(s => s.id === currentSessionId);
         if (!currentSession) return;
         
+        if (useCache) {
+            const cachedMsgKey = `sessionMessages_${currentSessionId}`;
+            const cachedMsg = sessionStorage.getItem(cachedMsgKey);
+            if (cachedMsg) {
+                try {
+                    currentSession.messages = JSON.parse(cachedMsg);
+                    renderChatMessages();
+                } catch (e) {
+                    sessionStorage.removeItem(cachedMsgKey);
+                }
+            }
+        }
+
         try {
             const res = await fetch(`/api/sessions/${currentSessionId}/messages`);
             if (res.ok) {
-                currentSession.messages = await res.json();
+                const freshMessages = await res.json();
+                const cachedMsgKey = `sessionMessages_${currentSessionId}`;
+                sessionStorage.setItem(cachedMsgKey, JSON.stringify(freshMessages));
+                
+                currentSession.messages = freshMessages;
                 renderChatMessages();
             }
         } catch (e) {
@@ -350,44 +409,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // DB Status and Metadata Check
-    async function checkDatabaseStatus() {
+    async function checkDatabaseStatus(useCache = false) {
+        if (useCache) {
+            const cachedDB = sessionStorage.getItem('databaseStatus');
+            if (cachedDB) {
+                try {
+                    const data = JSON.parse(cachedDB);
+                    renderDatabaseStatus(data);
+                } catch (e) {
+                    sessionStorage.removeItem('databaseStatus');
+                }
+            }
+        }
+
         try {
             const response = await fetch('/api/status');
             const data = await response.json();
-            
-            if (data.exists) {
-                dbIndicator.className = 'pulse-dot active';
-                dbIndicator.style.backgroundColor = 'var(--system-green)';
-                statCollection.textContent = data.collection;
-                statChunks.textContent = data.total_chunks;
-                statLlm.textContent = data.model;
-                
-                const currentFiles = data.files || [];
-                
-                // Compare with previously indexed files to show toast notification
-                if (previouslyIndexedFiles !== null) {
-                    const currentNames = currentFiles.map(f => f.name);
-                    const newFiles = currentNames.filter(name => !previouslyIndexedFiles.includes(name));
-                    newFiles.forEach(name => {
-                        showToast(`El documento "${name.replace('.pdf', '')}" ya se ha indexado.`);
-                    });
-                }
-                previouslyIndexedFiles = currentFiles.map(f => f.name);
-                
-                renderIndexedFiles(currentFiles);
-            } else {
-                dbIndicator.className = 'pulse-dot inactive';
-                dbIndicator.style.backgroundColor = 'var(--text-muted)';
-                statCollection.textContent = '-';
-                statChunks.textContent = '-';
-                statLlm.textContent = '-';
-                indexedFilesList.innerHTML = '<li class="empty-list">No hay colección de base de datos activa.</li>';
-                previouslyIndexedFiles = [];
-            }
+            sessionStorage.setItem('databaseStatus', JSON.stringify(data));
+            renderDatabaseStatus(data);
         } catch (e) {
             console.error("Error checking database status:", e);
+            if (!sessionStorage.getItem('databaseStatus')) {
+                dbIndicator.className = 'pulse-dot inactive';
+                dbIndicator.style.backgroundColor = 'var(--system-red)';
+            }
+        }
+    }
+
+    function renderDatabaseStatus(data) {
+        if (data.exists) {
+            dbIndicator.className = 'pulse-dot active';
+            dbIndicator.style.backgroundColor = 'var(--system-green)';
+            statCollection.textContent = data.collection;
+            statChunks.textContent = data.total_chunks;
+            statLlm.textContent = data.model;
+            
+            const currentFiles = data.files || [];
+            
+            // Compare with previously indexed files to show toast notification
+            if (previouslyIndexedFiles !== null) {
+                const currentNames = currentFiles.map(f => f.name);
+                const newFiles = currentNames.filter(name => !previouslyIndexedFiles.includes(name));
+                newFiles.forEach(name => {
+                    showToast(`El documento "${name.replace('.pdf', '')}" ya se ha indexado.`);
+                });
+            }
+            previouslyIndexedFiles = currentFiles.map(f => f.name);
+            
+            renderIndexedFiles(currentFiles);
+        } else {
             dbIndicator.className = 'pulse-dot inactive';
-            dbIndicator.style.backgroundColor = 'var(--system-red)';
+            dbIndicator.style.backgroundColor = 'var(--text-muted)';
+            statCollection.textContent = '-';
+            statChunks.textContent = '-';
+            statLlm.textContent = '-';
+            indexedFilesList.innerHTML = '<li class="empty-list">No hay colección de base de datos activa.</li>';
+            previouslyIndexedFiles = [];
         }
     }
 
@@ -553,7 +630,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const formTitle = new FormData();
             formTitle.append('session_id', currentSessionId);
             formTitle.append('title', shortTitle);
-            fetch('/api/sessions', { method: 'POST', body: formTitle }).then(() => renderSessionsList());
+            fetch('/api/sessions', { method: 'POST', body: formTitle }).then(() => {
+                sessionStorage.setItem('chatSessions', JSON.stringify(sessions));
+                renderSessionsList();
+            });
         }
 
         // 1. Add User Message to State
@@ -563,6 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
             imageBase64: attachedImageBase64
         };
         currentSession.messages.push(userMsg);
+        sessionStorage.setItem(`sessionMessages_${currentSessionId}`, JSON.stringify(currentSession.messages));
         renderChatMessages();
 
         // 2. Clear inputs and preview area
@@ -636,6 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 usage: data.usage
             };
             currentSession.messages.push(botMsg);
+            sessionStorage.setItem(`sessionMessages_${currentSessionId}`, JSON.stringify(currentSession.messages));
             renderChatMessages();
 
         } catch (err) {

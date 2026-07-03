@@ -58,22 +58,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check Authentication Status
     async function checkAuth() {
+        const cachedUser = sessionStorage.getItem('currentUser');
+        if (cachedUser) {
+            try {
+                currentUser = JSON.parse(cachedUser);
+                userDisplayName.textContent = currentUser.username;
+                loginOverlay.style.display = 'none';
+                
+                // Load from cache instantly
+                loadAvailableManuals(true);
+                loadPerformanceStats(true);
+            } catch (e) {
+                sessionStorage.removeItem('currentUser');
+            }
+        }
+
         try {
             const res = await fetch('/api/auth/me');
             if (res.ok) {
                 currentUser = await res.json();
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
                 userDisplayName.textContent = currentUser.username;
                 loginOverlay.style.display = 'none';
                 
-                // Load available manuals and performance stats
-                await loadAvailableManuals();
-                await loadPerformanceStats();
+                // Revalidate in background
+                loadAvailableManuals(false);
+                loadPerformanceStats(false);
             } else {
+                sessionStorage.clear();
                 loginOverlay.style.display = 'flex';
             }
         } catch (e) {
             console.error("Auth check failed:", e);
-            loginOverlay.style.display = 'flex';
+            if (!cachedUser) {
+                loginOverlay.style.display = 'flex';
+            }
         }
     }
 
@@ -112,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle Logout
     btnLogout.addEventListener('click', async () => {
         try {
+            sessionStorage.clear(); // Clear cache on logout
             const res = await fetch('/api/auth/logout', { method: 'POST' });
             if (res.ok) {
                 window.location.href = '/test';
@@ -122,69 +142,102 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Load available manuals into subject select dropdown
-    async function loadAvailableManuals() {
+    async function loadAvailableManuals(useCache = false) {
+        if (useCache) {
+            const cachedManuals = sessionStorage.getItem('availableManuals');
+            if (cachedManuals) {
+                try {
+                    const data = JSON.parse(cachedManuals);
+                    renderManualsList(data.files || []);
+                } catch (e) {
+                    sessionStorage.removeItem('availableManuals');
+                }
+            }
+        }
+
         try {
             const res = await fetch('/api/status');
             if (res.ok) {
                 const data = await res.json();
+                sessionStorage.setItem('availableManuals', JSON.stringify(data));
                 availableSubjects = data.files || [];
-                
-                // Clear dropdown except first "All" option
-                testSubjectSelect.innerHTML = '<option value="All">Aleatorio (Todas las materias)</option>';
-                
-                availableSubjects.forEach(file => {
-                    const opt = document.createElement('option');
-                    opt.value = file.name;
-                    opt.textContent = file.readable_name;
-                    testSubjectSelect.appendChild(opt);
-                });
+                renderManualsList(availableSubjects);
             }
         } catch (e) {
             console.error("Error loading manuals list:", e);
         }
     }
 
+    function renderManualsList(files) {
+        // Clear dropdown except first "All" option
+        testSubjectSelect.innerHTML = '<option value="All">Aleatorio (Todas las materias)</option>';
+        
+        files.forEach(file => {
+            const opt = document.createElement('option');
+            opt.value = file.name;
+            opt.textContent = file.readable_name;
+            testSubjectSelect.appendChild(opt);
+        });
+    }
+
     // Load user test performance stats
-    async function loadPerformanceStats() {
+    async function loadPerformanceStats(useCache = false) {
+        if (useCache) {
+            const cachedStats = sessionStorage.getItem('performanceStats');
+            if (cachedStats) {
+                try {
+                    const data = JSON.parse(cachedStats);
+                    renderStats(data);
+                } catch (e) {
+                    sessionStorage.removeItem('performanceStats');
+                }
+            }
+        }
+
         try {
             const res = await fetch('/api/tests/stats');
             if (res.ok) {
                 const data = await res.json();
-                statsPct.textContent = `${data.success_rate}%`;
-                statsTotal.textContent = data.total_answers;
-                
-                subjectProgressList.innerHTML = '';
-                if (!data.subjects || data.subjects.length === 0) {
-                    subjectProgressList.innerHTML = '<p class="empty-list" style="font-size:11px;">Aún no has respondido preguntas de test.</p>';
-                    return;
-                }
-                
-                // Sort subjects by total answers descending
-                const sortedSubjects = [...data.subjects].sort((a, b) => b.total - a.total);
-                
-                sortedSubjects.forEach(sub => {
-                    const pct = sub.percent;
-                    let progressColorClass = 'red';
-                    if (pct >= 70) progressColorClass = 'green';
-                    else if (pct >= 50) progressColorClass = 'yellow';
-                    
-                    const progressItem = document.createElement('div');
-                    progressItem.className = 'subject-progress-item';
-                    progressItem.innerHTML = `
-                        <div class="subject-info" style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
-                            <span class="subject-name" style="font-weight:500; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;" title="${sub.name}">${sub.name}</span>
-                            <span class="subject-ratio" style="color:var(--text-muted);">${sub.correct}/${sub.total} (${pct}%)</span>
-                        </div>
-                        <div class="progress-bar-bg" style="height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden;">
-                            <div class="progress-bar-fill ${progressColorClass}" style="width:${pct}%; height:100%; border-radius:3px;"></div>
-                        </div>
-                    `;
-                    subjectProgressList.appendChild(progressItem);
-                });
+                sessionStorage.setItem('performanceStats', JSON.stringify(data));
+                renderStats(data);
             }
         } catch (e) {
             console.error("Error loading performance stats:", e);
         }
+    }
+
+    function renderStats(data) {
+        statsPct.textContent = `${data.success_rate}%`;
+        statsTotal.textContent = data.total_answers;
+        
+        subjectProgressList.innerHTML = '';
+        if (!data.subjects || data.subjects.length === 0) {
+            subjectProgressList.innerHTML = '<p class="empty-list" style="font-size:11px;">Aún no has respondido preguntas de test.</p>';
+            return;
+        }
+        
+        // Sort subjects by total answers descending
+        const sortedSubjects = [...data.subjects].sort((a, b) => b.total - a.total);
+        
+        sortedSubjects.forEach(sub => {
+            const pct = sub.percent;
+            let progressColorClass = 'red';
+            if (pct >= 70) progressColorClass = 'green';
+            else if (pct >= 50) progressColorClass = 'yellow';
+            
+            const progressItem = document.createElement('div');
+            progressItem.className = 'subject-progress-item';
+            progressItem.innerHTML = `
+                <div class="subject-info" style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+                    <span class="subject-name" style="font-weight:500; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;" title="${sub.name}">${sub.name}</span>
+                    <span class="subject-ratio" style="color:var(--text-muted);">${sub.correct}/${sub.total} (${pct}%)</span>
+                </div>
+                <div class="progress-bar-bg" style="height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden;">
+                    <div class="progress-bar-fill ${progressColorClass}" style="width:${pct}%; height:100%; border-radius:3px;"></div>
+                </div>
+            `;
+            subjectProgressList.appendChild(progressItem);
+        });
     }
 
     // Handle Start Test Form Submit
