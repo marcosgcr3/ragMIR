@@ -466,4 +466,32 @@ document.addEventListener('DOMContentLoaded', () => {
         finishedState.style.display = 'none';
         welcomeState.style.display = 'flex';
     });
+
+    // Theme Switcher Logic
+    function initTheme() {
+        const savedTheme = localStorage.getItem('appTheme') || 'cyber';
+        applyTheme(savedTheme);
+        
+        const themeSelector = document.getElementById('theme-selector');
+        if (themeSelector) {
+            themeSelector.value = savedTheme;
+            themeSelector.addEventListener('change', (e) => {
+                const selected = e.target.value;
+                localStorage.setItem('appTheme', selected);
+                applyTheme(selected);
+            });
+        }
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.className = '';
+        document.body.className = '';
+        if (theme !== 'cyber') {
+            document.documentElement.classList.add(`theme-${theme}`);
+            document.body.classList.add(`theme-${theme}`);
+        }
+    }
+
+    // Initialize Theme
+    initTheme();
 });

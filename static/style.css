@@ -31,6 +31,197 @@
     --shadow-glow: 0 0 20px rgba(0, 242, 254, 0.1);
 }
 
+/* --- Design Theme Variations --- */
+body.theme-glass, .theme-glass body, html.theme-glass {
+    --bg-app: radial-gradient(circle at 50% 50%, #170d3a 0%, #06020f 100%);
+    --bg-sidebar: rgba(15, 17, 24, 0.45);
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --bg-card-hover: rgba(255, 255, 255, 0.08);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-glow: rgba(168, 85, 247, 0.25);
+    --text-primary: #f5f3ff;
+    --text-secondary: #c084fc;
+    --text-muted: #8b5cf6;
+    --accent-blue: #c084fc;
+    --accent-purple: #ec4899;
+    --accent-grad: linear-gradient(135deg, #a855f7, #ec4899);
+    --shadow-glow: 0 8px 32px 0 rgba(168, 85, 247, 0.15);
+}
+
+body.theme-glass .sidebar,
+body.theme-glass .panel,
+body.theme-glass .top-nav-bar,
+body.theme-glass .message-bubble,
+body.theme-glass .docs-modal-card {
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+body.theme-ocean, .theme-ocean body, html.theme-ocean {
+    --bg-app: #030c1b;
+    --bg-sidebar: #051329;
+    --bg-card: #0a2246;
+    --bg-card-hover: #0f2d5c;
+    --border-color: rgba(0, 242, 254, 0.12);
+    --border-glow: rgba(0, 242, 254, 0.3);
+    --text-primary: #e0f2fe;
+    --text-secondary: #7dd3fc;
+    --text-muted: #38bdf8;
+    --accent-blue: #06b6d4;
+    --accent-purple: #0ea5e9;
+    --accent-grad: linear-gradient(135deg, #06b6d4, #0ea5e9, #3b82f6);
+    --shadow-glow: 0 0 15px rgba(6, 182, 212, 0.25);
+}
+
+body.theme-emerald, .theme-emerald body, html.theme-emerald {
+    --bg-app: #040d0a;
+    --bg-sidebar: #071612;
+    --bg-card: #0c241e;
+    --bg-card-hover: #12332a;
+    --border-color: rgba(16, 185, 129, 0.15);
+    --border-glow: rgba(16, 185, 129, 0.3);
+    --text-primary: #ecfdf5;
+    --text-secondary: #a7f3d0;
+    --text-muted: #34d399;
+    --accent-blue: #059669;
+    --accent-purple: #10b981;
+    --accent-grad: linear-gradient(135deg, #059669, #10b981, #34d399);
+    --shadow-glow: 0 0 15px rgba(16, 185, 129, 0.25);
+}
+
+body.theme-light, .theme-light body, html.theme-light {
+    --bg-app: #f1f5f9;
+    --bg-sidebar: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8fafc;
+    --border-color: rgba(15, 23, 42, 0.08);
+    --border-glow: rgba(37, 99, 235, 0.15);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --accent-blue: #2563eb;
+    --accent-purple: #4f46e5;
+    --accent-grad: linear-gradient(135deg, #2563eb, #4facfe, #4f46e5);
+    --shadow-glow: 0 4px 20px rgba(37, 99, 235, 0.08);
+}
+
+/* Light mode specific element overrides to ensure perfect contrast and aesthetics */
+body.theme-light .panel h3,
+body.theme-light .top-nav-brand h2,
+body.theme-light .user-info,
+body.theme-light .docs-modal-header h3,
+body.theme-light .logo-title h2,
+body.theme-light .stat-val,
+body.theme-light .login-card h2,
+body.theme-light .message-bubble strong,
+body.theme-light .btn-close-modal,
+body.theme-light .modal-header h2 {
+    color: var(--text-primary) !important;
+}
+
+body.theme-light .form-group input,
+body.theme-light .form-group select {
+    color: var(--text-primary) !important;
+    background: #f8fafc !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-light .form-group select option {
+    background: #ffffff !important;
+    color: var(--text-primary) !important;
+}
+
+body.theme-light .chat-input-area,
+body.theme-light .chat-input-container {
+    background: #ffffff !important;
+}
+
+body.theme-light .input-wrapper {
+    background-color: #f8fafc !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.theme-light .chat-input {
+    color: var(--text-primary) !important;
+}
+
+body.theme-light .message-bubble p {
+    color: var(--text-primary) !important;
+}
+
+body.theme-light .typing-dots span {
+    background-color: var(--text-primary) !important;
+}
+
+body.theme-light .message-bot .message-bubble {
+    background: #f8fafc !important;
+}
+
+body.theme-light .message-user .message-bubble {
+    background: rgba(37, 99, 235, 0.08) !important;
+    border-color: rgba(37, 99, 235, 0.15) !important;
+}
+
+body.theme-light .kpi-card {
+    background: #f8fafc !important;
+}
+
+body.theme-light .chart-container {
+    background: #f8fafc !important;
+}
+
+body.theme-light .login-overlay {
+    background: rgba(241, 245, 249, 0.95) !important;
+}
+
+/* Theme Selector dropdown styling */
+.theme-select-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.theme-select {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    font-family: var(--font-body);
+}
+
+.theme-select:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-glow);
+    color: var(--text-primary);
+}
+
+.theme-select option {
+    background: var(--bg-sidebar);
+    color: #fff;
+}
+
+body.theme-light .theme-select {
+    background: #ffffff;
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+body.theme-light .theme-select:hover {
+    background: #f8fafc;
+    color: var(--text-primary);
+}
+
+body.theme-light .theme-select option {
+    background: #ffffff;
+    color: #0f172a;
+}
+
 body {
     background-color: var(--bg-app);
     color: var(--text-primary);

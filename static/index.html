@@ -12,6 +12,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/style.css?v=10">
     <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('appTheme') || 'cyber';
+            if (savedTheme !== 'cyber') {
+                document.documentElement.classList.add('theme-' + savedTheme);
+            }
+        })();
+    </script>
 </head>
 <body>
     <div class="app-container">
@@ -44,6 +52,15 @@
             </div>
             
             <div class="top-nav-right">
+                <div class="theme-select-container" style="margin-right: 8px;">
+                    <select id="theme-selector" class="theme-select" title="Cambiar tema de diseño">
+                        <option value="cyber">🌌 Cyber Dark</option>
+                        <option value="glass">🔮 Glassmorphism</option>
+                        <option value="ocean">🌊 Deep Ocean</option>
+                        <option value="emerald">🍃 Emerald Mint</option>
+                        <option value="light">☀️ Light Clinic</option>
+                    </select>
+                </div>
                 <button class="btn-top-docs" id="btn-show-docs" title="Ver Documentos Indexados" style="margin-right: 8px;">
                     <i class="fa-solid fa-folder-open"></i>
                 </button>
