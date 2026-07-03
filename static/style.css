@@ -135,87 +135,107 @@ body.theme-emerald, .theme-emerald body, html.theme-emerald {
     --btn-primary-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
-/* Neo-Brutalist Theme (Retro flat design, thick borders, sharp corners, hard offset shadows) */
-body.theme-brutalist, .theme-brutalist body, html.theme-brutalist {
-    --bg-app: #121214;
-    --bg-sidebar: #18181c;
-    --bg-card: #202024;
-    --bg-card-hover: #2a2a30;
-    --border-color: #ffffff;
-    --border-glow: #eab308;
-    --text-primary: #ffffff;
-    --text-secondary: #e2e8f0;
-    --text-muted: #a0aec0;
-    --accent-blue: #eab308; /* Yellow */
-    --accent-purple: #f43f5e; /* Rose */
-    --accent-grad: linear-gradient(135deg, #eab308, #f43f5e);
-    --shadow-glow: 4px 4px 0px #ffffff;
+/* Aesthetic Light Theme (Pastel soft gradient, frosted transparent cards, pill buttons, lavender theme) */
+body.theme-aesthetic, .theme-aesthetic body, html.theme-aesthetic {
+    --bg-app: linear-gradient(135deg, #fef9c3 0%, #fbcfe8 50%, #e0e7ff 100%);
+    --bg-sidebar: rgba(255, 255, 255, 0.45);
+    --bg-card: rgba(255, 255, 255, 0.6);
+    --bg-card-hover: rgba(255, 255, 255, 0.85);
+    --border-color: rgba(255, 255, 255, 0.5);
+    --border-glow: rgba(168, 85, 247, 0.2);
+    --text-primary: #3c2a4d;
+    --text-secondary: #705389;
+    --text-muted: #9f87b8;
+    --accent-blue: #8b5cf6;
+    --accent-purple: #ec4899;
+    --accent-grad: linear-gradient(135deg, #a855f7, #ec4899);
+    --shadow-glow: 0 10px 30px rgba(168, 85, 247, 0.08);
     
-    --border-radius-card: 0px !important; /* Fully sharp corners */
-    --border-radius-btn: 0px !important;
-    --border-radius-bubble: 0px !important;
-    --border-radius-input: 0px !important;
-    --border-width-global: 2.5px;
-    
-    --btn-primary-bg: #eab308;
-    --btn-primary-color: #000000;
-    --btn-primary-border: 2.5px solid #ffffff;
-    --btn-primary-shadow: 3px 3px 0px #ffffff;
-    --btn-hover-transform: translate(-2px, -2px);
-    --shadow-card: 5px 5px 0px #ffffff;
-    --panel-border: 2.5px solid #ffffff;
-    --msg-user-bg: rgba(244, 63, 94, 0.15);
-    --msg-user-border: 2.5px solid #ffffff;
-    --msg-bot-bg: #202024;
-    --msg-bot-border: 2.5px solid #ffffff;
+    --border-radius-card: 20px;
+    --border-radius-btn: 9999px; /* Pill buttons */
+    --border-radius-bubble: 18px;
+    --border-radius-input: 20px;
+    --btn-primary-bg: linear-gradient(135deg, #8b5cf6, #ec4899);
+    --btn-primary-color: #ffffff;
+    --btn-primary-shadow: 0 6px 18px rgba(168, 85, 247, 0.2);
+    --shadow-card: 0 10px 30px rgba(168, 85, 247, 0.06);
+    --panel-border: 1px solid rgba(255, 255, 255, 0.5);
+    --msg-user-bg: rgba(168, 85, 247, 0.1);
+    --msg-user-border: 1px solid rgba(168, 85, 247, 0.15);
+    --msg-bot-bg: rgba(255, 255, 255, 0.7);
+    --msg-bot-border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-/* Apply Brutalist border and shadow overrides */
-body.theme-brutalist .top-nav-bar,
-body.theme-brutalist .sidebar,
-body.theme-brutalist .panel,
-body.theme-brutalist .message-bubble,
-body.theme-brutalist .input-wrapper,
-body.theme-brutalist .user-profile,
-body.theme-brutalist .docs-modal-card,
-body.theme-brutalist .login-card,
-body.theme-brutalist .form-group input,
-body.theme-brutalist .form-group select,
-body.theme-brutalist .option-btn,
-body.theme-brutalist .toast-notification,
-body.theme-brutalist .btn-top-docs,
-body.theme-brutalist .btn-top-logout,
-body.theme-brutalist .btn-delete-session {
-    border: var(--border-width-global) solid #ffffff !important;
-    border-radius: var(--border-radius-card) !important;
-    box-shadow: var(--shadow-card) !important;
+/* Apply Aesthetic Light blur and font colors */
+body.theme-aesthetic .sidebar,
+body.theme-aesthetic .panel,
+body.theme-aesthetic .top-nav-bar,
+body.theme-aesthetic .message-bubble,
+body.theme-aesthetic .docs-modal-card {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
-body.theme-brutalist .btn-primary,
-body.theme-brutalist button.btn:not(.btn-delete-session):not(.btn-user-action):not(.btn-close-modal):not(.btn-remove-preview) {
-    background: var(--btn-primary-bg) !important;
-    color: var(--btn-primary-color) !important;
-    border: var(--btn-primary-border) !important;
-    box-shadow: var(--btn-primary-shadow) !important;
-    border-radius: var(--border-radius-btn) !important;
-    transform: none;
-    transition: all 0.15s ease;
+body.theme-aesthetic .panel h3,
+body.theme-aesthetic .top-nav-brand h2,
+body.theme-aesthetic .user-info,
+body.theme-aesthetic .docs-modal-header h3,
+body.theme-aesthetic .logo-title h2,
+body.theme-aesthetic .stat-val,
+body.theme-aesthetic .login-card h2,
+body.theme-aesthetic .message-bubble strong,
+body.theme-aesthetic .btn-close-modal,
+body.theme-aesthetic .modal-header h2 {
+    color: var(--text-primary) !important;
 }
 
-body.theme-brutalist .btn-primary:hover,
-body.theme-brutalist button.btn:not(.btn-delete-session):not(.btn-user-action):not(.btn-close-modal):not(.btn-remove-preview):hover {
-    transform: var(--btn-hover-transform) !important;
-    box-shadow: 5px 5px 0px #ffffff !important;
+body.theme-aesthetic .form-group input,
+body.theme-aesthetic .form-group select {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+    border-color: var(--border-color) !important;
+    border-radius: var(--border-radius-input) !important;
 }
 
-body.theme-brutalist .btn-primary:active,
-body.theme-brutalist button.btn:not(.btn-delete-session):not(.btn-user-action):not(.btn-close-modal):not(.btn-remove-preview):active {
-    transform: translate(2px, 2px) !important;
-    box-shadow: 1px 1px 0px #ffffff !important;
+body.theme-aesthetic .form-group select option {
+    background: #ffffff !important;
+    color: var(--text-primary) !important;
 }
 
-body.theme-brutalist .message-bubble strong {
-    color: #eab308 !important;
+body.theme-aesthetic .chat-input-area,
+body.theme-aesthetic .chat-input-container {
+    background: transparent !important;
+}
+
+body.theme-aesthetic .input-wrapper {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+    box-shadow: 0 10px 25px rgba(168, 85, 247, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+}
+
+body.theme-aesthetic .chat-input {
+    color: var(--text-primary) !important;
+}
+
+body.theme-aesthetic .message-bubble p {
+    color: var(--text-primary) !important;
+}
+
+body.theme-aesthetic .typing-dots span {
+    background-color: var(--text-primary) !important;
+}
+
+body.theme-aesthetic .kpi-card {
+    background: rgba(255, 255, 255, 0.5) !important;
+}
+
+body.theme-aesthetic .chart-container {
+    background: rgba(255, 255, 255, 0.4) !important;
+}
+
+body.theme-aesthetic .login-overlay {
+    background: rgba(254, 249, 195, 0.8) !important;
+    backdrop-filter: blur(15px);
 }
 
 /* Light Clinic theme (Minimalist light, soft shadows, borderless card focus) */
