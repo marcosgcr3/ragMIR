@@ -11,12 +11,13 @@ from typing import Optional, List, Dict, Any
 def hash_password(password: str, salt: bytes = None) -> tuple:
     if salt is None:
         salt = os.urandom(16)
-    pw_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+    # 600,000 iterations is the recommended value by OWASP for PBKDF2-HMAC-SHA256
+    pw_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 600000)
     return pw_hash.hex(), salt.hex()
 
 def verify_password(password: str, password_hash_hex: str, salt_hex: str) -> bool:
     salt = bytes.fromhex(salt_hex)
-    pw_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+    pw_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 600000)
     return pw_hash.hex() == password_hash_hex
 
 def get_db_connection(db_path: Path) -> sqlite3.Connection:
@@ -168,20 +169,23 @@ def init_db(db_path: Path) -> None:
         conn.commit()
         
     # Auto-populate Marcos and Elsa
-    cto_password = os.environ.get("CTO_PASSWORD", "ragmir2026")
+    cto_password = os.environ.get("CTO_PASSWORD")
     
-    with get_db_connection(db_path) as conn:
-        for username in ["Marcos", "Elsa"]:
-            cur = conn.cursor()
-            cur.execute("SELECT id FROM users WHERE username = ?", (username,))
-            row = cur.fetchone()
-            if not row:
-                pw_hash, salt = hash_password(cto_password)
-                conn.execute(
-                    "INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)",
-                    (username, pw_hash, salt)
-                )
-                print(f"[!] Usuario inicial creado: {username}")
+    if cto_password:
+        with get_db_connection(db_path) as conn:
+            for username in ["Marcos", "Elsa"]:
+                cur = conn.cursor()
+                cur.execute("SELECT id FROM users WHERE username = ?", (username,))
+                row = cur.fetchone()
+                if not row:
+                    pw_hash, salt = hash_password(cto_password)
+                    conn.execute(
+                        "INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)",
+                        (username, pw_hash, salt)
+                    )
+                    print(f"[!] Usuario inicial creado: {username}")
+    else:
+        print("[!] ADVERTENCIA: CTO_PASSWORD no está definida en el entorno. No se crearán los usuarios iniciales automáticos.")
         
         # Seed official MIR questions if question_pool is empty
         cur = conn.cursor()

@@ -17,8 +17,9 @@ import vector_store
 import database
 from rag_engine import RAGEngine
 
-# Suppress self-signed certificate warnings for local Qdrant VPS calls
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+# Suppress self-signed certificate warnings for local Qdrant VPS calls only if SSL verification is disabled
+if not config.QDRANT_VERIFY_SSL:
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Ensure manuals directory exists
 MANUALS_DIR = config.BASE_DIR / "manuals"
@@ -78,13 +79,14 @@ async def login(username: str = Form(...), password: str = Form(...)):
     token = database.create_session(db_path, row["id"])
     
     response = JSONResponse(content={"message": "Sesión iniciada con éxito", "username": username})
+    is_production = os.environ.get("ENV", "development").lower() == "production"
     response.set_cookie(
         key="session_token",
         value=token,
         httponly=True,
         max_age=30 * 24 * 60 * 60, # 30 days
         samesite="lax",
-        secure=False # Set to True if using HTTPS
+        secure=is_production
     )
     return response
 
@@ -257,13 +259,16 @@ async def post_upload(
     user: dict = Depends(get_current_user)
 ):
     """Upload a PDF manual and trigger background indexing."""
-    global is_indexing
-    if not file.filename.lower().endswith(".pdf"):
+    safe_filename = Path(file.filename).name
+    if not safe_filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF.")
         
     try:
         # Save file to manuals directory
-        file_path = MANUALS_DIR / file.filename
+        file_path = (MANUALS_DIR / safe_filename).resolve()
+        if not file_path.is_relative_to(MANUALS_DIR.resolve()):
+            raise HTTPException(status_code=400, detail="Acceso denegado: el nombre de archivo no es válido.")
+            
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
@@ -271,9 +276,9 @@ async def post_upload(
         if not is_indexing:
             is_indexing = True
             background_tasks.add_task(run_indexing)
-            return {"message": f"Archivo '{file.filename}' subido. Indexando en segundo plano..."}
+            return {"message": f"Archivo '{safe_filename}' subido. Indexando en segundo plano..."}
         else:
-            return {"message": f"Archivo '{file.filename}' subido. Se indexará al finalizar el proceso actual."}
+            return {"message": f"Archivo '{safe_filename}' subido. Se indexará al finalizar el proceso actual."}
             
     except Exception as e:
         return JSONResponse(
@@ -297,19 +302,23 @@ async def post_clear(user: dict = Depends(get_current_user)):
 async def delete_document(filename: str, user: dict = Depends(get_current_user)):
     """Delete a document from Qdrant index and the physical storage."""
     import re
-    if re.match(r"^[A-Z]{2}\.pdf$", filename):
+    safe_filename = Path(filename).name
+    if re.match(r"^[A-Z]{2}\.pdf$", safe_filename):
         raise HTTPException(status_code=400, detail="No se pueden eliminar los manuales oficiales.")
         
     try:
         # Delete from Qdrant index
-        vector_store.delete_file_from_index(config.DEFAULT_DB_PATH, filename)
+        vector_store.delete_file_from_index(config.DEFAULT_DB_PATH, safe_filename)
         
         # Delete physical file
-        file_path = MANUALS_DIR / filename
+        file_path = (MANUALS_DIR / safe_filename).resolve()
+        if not file_path.is_relative_to(MANUALS_DIR.resolve()):
+            raise HTTPException(status_code=400, detail="Acceso denegado: el nombre de archivo no es válido.")
+            
         if file_path.exists():
             file_path.unlink()
             
-        return {"message": f"Documento '{filename}' eliminado con éxito."}
+        return {"message": f"Documento '{safe_filename}' eliminado con éxito."}
     except Exception as e:
         return JSONResponse(
             status_code=500,

@@ -15,8 +15,9 @@ def get_client() -> QdrantClient:
             "QDRANT_URL no está configurada o contiene el marcador '<vps_ip>'. "
             "Por favor, edita tu archivo '.env' y pon la IP o dominio correcto de tu VPS."
         )
-    # Bypass SSL verification for self-signed certificates (e.g. sslip.io subdomains)
-    return QdrantClient(url=config.QDRANT_URL, api_key=config.QDRANT_API_KEY, verify=False)
+    # Configure SSL verification (either verify boolean or path to CA bundle)
+    verify_val = config.QDRANT_CA_PEM if config.QDRANT_CA_PEM else config.QDRANT_VERIFY_SSL
+    return QdrantClient(url=config.QDRANT_URL, api_key=config.QDRANT_API_KEY, verify=verify_val)
 
 def init_db(db_path: Path) -> None:
     """Initialize the Qdrant database and create the collection if it doesn't exist."""

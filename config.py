@@ -13,6 +13,8 @@ DEFAULT_DB_PATH = BASE_DIR / "db" / os.environ.get("DB_PATH", "rag_store.db")
 QDRANT_URL = os.environ.get("QDRANT_URL")
 QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")
 QDRANT_COLLECTION = os.environ.get("QDRANT_COLLECTION", "oposiciones")
+QDRANT_VERIFY_SSL = os.environ.get("QDRANT_VERIFY_SSL", "true").lower() in ("true", "1", "yes")
+QDRANT_CA_PEM = os.environ.get("QDRANT_CA_PEM")
 
 # Model Configuration
 # Google's recommended embedding model: gemini-embedding-001
