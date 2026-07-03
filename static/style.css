@@ -31,361 +31,6 @@
     --shadow-glow: 0 0 20px rgba(0, 242, 254, 0.1);
 }
 
-/* --- Design Theme Variations --- */
-
-/* Default structural variables in :root */
-:root {
-    --border-radius-card: 16px;
-    --border-radius-btn: 12px;
-    --border-radius-bubble: 16px;
-    --border-radius-input: 16px;
-    --border-width-global: 1px;
-    --btn-primary-bg: var(--accent-grad);
-    --btn-primary-color: #fff;
-    --btn-primary-border: none;
-    --btn-primary-shadow: 0 2px 10px rgba(0, 242, 254, 0.2);
-    --btn-hover-transform: scale(1.03);
-    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.2);
-    --panel-border: 1px solid var(--border-color);
-    --msg-user-bg: rgba(99, 102, 241, 0.15);
-    --msg-user-border: 1px solid rgba(99, 102, 241, 0.25);
-    --msg-bot-bg: var(--bg-card);
-    --msg-bot-border: 1px solid var(--border-color);
-}
-
-/* Glassmorphism theme (Translucent, rounded, glow) */
-body.theme-glass, .theme-glass body, html.theme-glass {
-    --bg-app: radial-gradient(circle at 50% 50%, #170d3a 0%, #06020f 100%);
-    --bg-sidebar: rgba(15, 17, 24, 0.45);
-    --bg-card: rgba(255, 255, 255, 0.03);
-    --bg-card-hover: rgba(255, 255, 255, 0.08);
-    --border-color: rgba(255, 255, 255, 0.08);
-    --border-glow: rgba(168, 85, 247, 0.25);
-    --text-primary: #f5f3ff;
-    --text-secondary: #c084fc;
-    --text-muted: #8b5cf6;
-    --accent-blue: #c084fc;
-    --accent-purple: #ec4899;
-    --accent-grad: linear-gradient(135deg, #a855f7, #ec4899);
-    --shadow-glow: 0 8px 32px 0 rgba(168, 85, 247, 0.15);
-    
-    --border-radius-card: 24px;
-    --border-radius-btn: 9999px; /* Pill buttons */
-    --border-radius-bubble: 20px;
-    --border-radius-input: 20px;
-    --btn-primary-bg: linear-gradient(135deg, #a855f7, #ec4899);
-    --btn-primary-shadow: 0 8px 20px rgba(168, 85, 247, 0.25);
-    --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 15px rgba(168, 85, 247, 0.1);
-}
-
-body.theme-glass .sidebar,
-body.theme-glass .panel,
-body.theme-glass .top-nav-bar,
-body.theme-glass .message-bubble,
-body.theme-glass .docs-modal-card {
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-}
-
-/* Deep Ocean theme (High-tech navy, sharp border) */
-body.theme-ocean, .theme-ocean body, html.theme-ocean {
-    --bg-app: #030c1b;
-    --bg-sidebar: #051329;
-    --bg-card: #0a2246;
-    --bg-card-hover: #0f2d5c;
-    --border-color: rgba(0, 242, 254, 0.12);
-    --border-glow: rgba(0, 242, 254, 0.3);
-    --text-primary: #e0f2fe;
-    --text-secondary: #7dd3fc;
-    --text-muted: #38bdf8;
-    --accent-blue: #06b6d4;
-    --accent-purple: #0ea5e9;
-    --accent-grad: linear-gradient(135deg, #06b6d4, #0ea5e9, #3b82f6);
-    --shadow-glow: 0 0 15px rgba(6, 182, 212, 0.25);
-    
-    --border-radius-card: 12px;
-    --border-radius-btn: 6px;
-    --border-radius-bubble: 12px;
-    --border-radius-input: 8px;
-    --btn-primary-bg: linear-gradient(135deg, #06b6d4, #3b82f6);
-    --btn-primary-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
-}
-
-/* Emerald Mint theme (Clinical dark green) */
-body.theme-emerald, .theme-emerald body, html.theme-emerald {
-    --bg-app: #040d0a;
-    --bg-sidebar: #071612;
-    --bg-card: #0c241e;
-    --bg-card-hover: #12332a;
-    --border-color: rgba(16, 185, 129, 0.15);
-    --border-glow: rgba(16, 185, 129, 0.3);
-    --text-primary: #ecfdf5;
-    --text-secondary: #a7f3d0;
-    --text-muted: #34d399;
-    --accent-blue: #059669;
-    --accent-purple: #10b981;
-    --accent-grad: linear-gradient(135deg, #059669, #10b981, #34d399);
-    --shadow-glow: 0 0 15px rgba(16, 185, 129, 0.25);
-    
-    --border-radius-card: 10px;
-    --border-radius-btn: 8px;
-    --border-radius-bubble: 10px;
-    --border-radius-input: 8px;
-    --btn-primary-bg: linear-gradient(135deg, #059669, #10b981);
-    --btn-primary-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-}
-
-/* Aesthetic Light Theme (Pastel soft gradient, frosted transparent cards, pill buttons, lavender theme) */
-body.theme-aesthetic, .theme-aesthetic body, html.theme-aesthetic {
-    --bg-app: linear-gradient(135deg, #fef9c3 0%, #fbcfe8 50%, #e0e7ff 100%);
-    --bg-sidebar: rgba(255, 255, 255, 0.45);
-    --bg-card: rgba(255, 255, 255, 0.6);
-    --bg-card-hover: rgba(255, 255, 255, 0.85);
-    --border-color: rgba(255, 255, 255, 0.5);
-    --border-glow: rgba(168, 85, 247, 0.2);
-    --text-primary: #3c2a4d;
-    --text-secondary: #705389;
-    --text-muted: #9f87b8;
-    --accent-blue: #8b5cf6;
-    --accent-purple: #ec4899;
-    --accent-grad: linear-gradient(135deg, #a855f7, #ec4899);
-    --shadow-glow: 0 10px 30px rgba(168, 85, 247, 0.08);
-    
-    --border-radius-card: 20px;
-    --border-radius-btn: 9999px; /* Pill buttons */
-    --border-radius-bubble: 18px;
-    --border-radius-input: 20px;
-    --btn-primary-bg: linear-gradient(135deg, #8b5cf6, #ec4899);
-    --btn-primary-color: #ffffff;
-    --btn-primary-shadow: 0 6px 18px rgba(168, 85, 247, 0.2);
-    --shadow-card: 0 10px 30px rgba(168, 85, 247, 0.06);
-    --panel-border: 1px solid rgba(255, 255, 255, 0.5);
-    --msg-user-bg: rgba(168, 85, 247, 0.1);
-    --msg-user-border: 1px solid rgba(168, 85, 247, 0.15);
-    --msg-bot-bg: rgba(255, 255, 255, 0.7);
-    --msg-bot-border: 1px solid rgba(255, 255, 255, 0.6);
-}
-
-/* Apply Aesthetic Light blur and font colors */
-body.theme-aesthetic .sidebar,
-body.theme-aesthetic .panel,
-body.theme-aesthetic .top-nav-bar,
-body.theme-aesthetic .message-bubble,
-body.theme-aesthetic .docs-modal-card {
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-}
-
-body.theme-aesthetic .panel h3,
-body.theme-aesthetic .top-nav-brand h2,
-body.theme-aesthetic .user-info,
-body.theme-aesthetic .docs-modal-header h3,
-body.theme-aesthetic .logo-title h2,
-body.theme-aesthetic .stat-val,
-body.theme-aesthetic .login-card h2,
-body.theme-aesthetic .message-bubble strong,
-body.theme-aesthetic .btn-close-modal,
-body.theme-aesthetic .modal-header h2 {
-    color: var(--text-primary) !important;
-}
-
-body.theme-aesthetic .form-group input,
-body.theme-aesthetic .form-group select {
-    color: var(--text-primary) !important;
-    background: rgba(255, 255, 255, 0.6) !important;
-    border-color: var(--border-color) !important;
-    border-radius: var(--border-radius-input) !important;
-}
-
-body.theme-aesthetic .form-group select option {
-    background: #ffffff !important;
-    color: var(--text-primary) !important;
-}
-
-body.theme-aesthetic .chat-input-area,
-body.theme-aesthetic .chat-input-container {
-    background: transparent !important;
-}
-
-body.theme-aesthetic .input-wrapper {
-    background-color: rgba(255, 255, 255, 0.7) !important;
-    box-shadow: 0 10px 25px rgba(168, 85, 247, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.6) !important;
-}
-
-body.theme-aesthetic .chat-input {
-    color: var(--text-primary) !important;
-}
-
-body.theme-aesthetic .message-bubble p {
-    color: var(--text-primary) !important;
-}
-
-body.theme-aesthetic .typing-dots span {
-    background-color: var(--text-primary) !important;
-}
-
-body.theme-aesthetic .kpi-card {
-    background: rgba(255, 255, 255, 0.5) !important;
-}
-
-body.theme-aesthetic .chart-container {
-    background: rgba(255, 255, 255, 0.4) !important;
-}
-
-body.theme-aesthetic .login-overlay {
-    background: rgba(254, 249, 195, 0.8) !important;
-    backdrop-filter: blur(15px);
-}
-
-/* Light Clinic theme (Minimalist light, soft shadows, borderless card focus) */
-body.theme-light, .theme-light body, html.theme-light {
-    --bg-app: #f1f5f9;
-    --bg-sidebar: #ffffff;
-    --bg-card: #ffffff;
-    --bg-card-hover: #f8fafc;
-    --border-color: rgba(15, 23, 42, 0.07);
-    --border-glow: rgba(37, 99, 235, 0.12);
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
-    --accent-blue: #2563eb;
-    --accent-purple: #4f46e5;
-    --accent-grad: linear-gradient(135deg, #2563eb, #4facfe, #4f46e5);
-    --shadow-glow: 0 4px 12px rgba(37, 99, 235, 0.05);
-    
-    --border-radius-card: 12px;
-    --border-radius-btn: 8px;
-    --border-radius-bubble: 12px;
-    --border-radius-input: 8px;
-    --btn-primary-bg: #2563eb;
-    --btn-primary-color: #ffffff;
-    --btn-primary-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
-    --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.03);
-    --panel-border: 1px solid rgba(15, 23, 42, 0.06);
-    --msg-user-bg: rgba(37, 99, 235, 0.08);
-    --msg-user-border: 1px solid rgba(37, 99, 235, 0.15);
-    --msg-bot-bg: #ffffff;
-    --msg-bot-border: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-/* Light mode specific element overrides to ensure perfect contrast and aesthetics */
-body.theme-light .panel h3,
-body.theme-light .top-nav-brand h2,
-body.theme-light .user-info,
-body.theme-light .docs-modal-header h3,
-body.theme-light .logo-title h2,
-body.theme-light .stat-val,
-body.theme-light .login-card h2,
-body.theme-light .message-bubble strong,
-body.theme-light .btn-close-modal,
-body.theme-light .modal-header h2 {
-    color: var(--text-primary) !important;
-}
-
-body.theme-light .form-group input,
-body.theme-light .form-group select {
-    color: var(--text-primary) !important;
-    background: #f8fafc !important;
-    border-color: var(--border-color) !important;
-}
-
-body.theme-light .form-group select option {
-    background: #ffffff !important;
-    color: var(--text-primary) !important;
-}
-
-body.theme-light .chat-input-area,
-body.theme-light .chat-input-container {
-    background: #ffffff !important;
-}
-
-body.theme-light .input-wrapper {
-    background-color: #f8fafc !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-}
-
-body.theme-light .chat-input {
-    color: var(--text-primary) !important;
-}
-
-body.theme-light .message-bubble p {
-    color: var(--text-primary) !important;
-}
-
-body.theme-light .typing-dots span {
-    background-color: var(--text-primary) !important;
-}
-
-body.theme-light .message-bot .message-bubble {
-    background: #f8fafc !important;
-}
-
-body.theme-light .message-user .message-bubble {
-    background: rgba(37, 99, 235, 0.08) !important;
-    border-color: rgba(37, 99, 235, 0.15) !important;
-}
-
-body.theme-light .kpi-card {
-    background: #f8fafc !important;
-}
-
-body.theme-light .chart-container {
-    background: #f8fafc !important;
-}
-
-body.theme-light .login-overlay {
-    background: rgba(241, 245, 249, 0.95) !important;
-}
-
-/* Theme Selector dropdown styling */
-.theme-select-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.theme-select {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    outline: none;
-    font-family: var(--font-body);
-}
-
-.theme-select:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: var(--border-glow);
-    color: var(--text-primary);
-}
-
-.theme-select option {
-    background: var(--bg-sidebar);
-    color: #fff;
-}
-
-body.theme-light .theme-select {
-    background: #ffffff;
-    color: var(--text-secondary);
-    border-color: var(--border-color);
-}
-
-body.theme-light .theme-select:hover {
-    background: #f8fafc;
-    color: var(--text-primary);
-}
-
-body.theme-light .theme-select option {
-    background: #ffffff;
-    color: #0f172a;
-}
-
 body {
     background-color: var(--bg-app);
     color: var(--text-primary);
@@ -473,17 +118,17 @@ body {
 /* Sidebar Panels */
 .panel {
     background-color: var(--bg-card);
-    border: var(--panel-border);
-    border-radius: var(--border-radius-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
     padding: 16px;
     margin-bottom: 20px;
-    box-shadow: var(--shadow-card);
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .panel:hover {
     border-color: rgba(0, 242, 254, 0.25);
-    box-shadow: var(--shadow-card), var(--shadow-glow);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), var(--shadow-glow);
 }
 
 .panel h3 {
@@ -697,24 +342,13 @@ body {
     justify-content: center;
     gap: 8px;
     padding: 12px 16px;
-    border-radius: var(--border-radius-btn);
+    border-radius: 12px;
     font-family: var(--font-heading);
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
-}
-
-.btn-primary {
-    background: var(--btn-primary-bg);
-    color: var(--btn-primary-color);
-    border: var(--btn-primary-border);
-    box-shadow: var(--btn-primary-shadow);
-}
-
-.btn-primary:hover {
-    transform: var(--btn-hover-transform);
 }
 
 .btn-block {
@@ -931,22 +565,22 @@ body {
 
 .message-bubble {
     padding: 12px 18px;
-    border-radius: var(--border-radius-bubble);
+    border-radius: 16px;
     font-size: 14px;
     line-height: 1.5;
     word-break: break-word;
 }
 
 .message-user .message-bubble {
-    background: var(--msg-user-bg);
-    border: var(--msg-user-border);
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.25);
     color: var(--text-primary);
     border-top-right-radius: 4px;
 }
 
 .message-bot .message-bubble {
-    background: var(--msg-bot-bg);
-    border: var(--msg-bot-border);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     color: var(--text-primary);
     border-top-left-radius: 4px;
 }
@@ -1124,7 +758,7 @@ body {
 .input-wrapper {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-input);
+    border-radius: 16px;
     padding: 8px 16px;
     display: flex;
     align-items: center;
@@ -1861,7 +1495,7 @@ body {
     gap: 14px;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-card);
+    border-radius: 10px;
     padding: 14px 18px;
     text-align: left;
     color: var(--text-secondary);

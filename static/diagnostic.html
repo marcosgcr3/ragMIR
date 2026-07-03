@@ -225,14 +225,6 @@
         .btn-outline { display:inline-flex; align-items:center; gap:8px; background:transparent; border:1.5px solid rgba(255,255,255,0.13); color:#94a3b8; padding:13px 28px; border-radius:10px; font-size:0.95rem; font-weight:500; cursor:pointer; font-family:'Outfit',sans-serif; text-decoration:none; transition:all 0.2s; }
         .btn-outline:hover { border-color:rgba(255,255,255,0.25); color:#e2e8f0; }
     </style>
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('appTheme') || 'cyber';
-            if (savedTheme !== 'cyber') {
-                document.documentElement.classList.add('theme-' + savedTheme);
-            }
-        })();
-    </script>
 </head>
 <body>
 <div class="app-container">
@@ -265,16 +257,6 @@
         </div>
         
         <div class="top-nav-right">
-            <div class="theme-select-container" style="margin-right: 8px;">
-                <select id="theme-selector" class="theme-select" title="Cambiar tema de diseño">
-                    <option value="cyber">🌌 Cyber Dark</option>
-                    <option value="glass">🔮 Glassmorphism</option>
-                    <option value="ocean">🌊 Deep Ocean</option>
-                    <option value="emerald">🍃 Emerald Mint</option>
-                    <option value="aesthetic">🌸 Aesthetic Light</option>
-                    <option value="light">☀️ Light Clinic</option>
-                </select>
-            </div>
             <button class="btn-top-docs" id="btn-show-docs" title="Ver Documentos Indexados" style="margin-right: 8px;">
                 <i class="fa-solid fa-folder-open"></i>
             </button>
