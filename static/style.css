@@ -32,6 +32,28 @@
 }
 
 /* --- Design Theme Variations --- */
+
+/* Default structural variables in :root */
+:root {
+    --border-radius-card: 16px;
+    --border-radius-btn: 12px;
+    --border-radius-bubble: 16px;
+    --border-radius-input: 16px;
+    --border-width-global: 1px;
+    --btn-primary-bg: var(--accent-grad);
+    --btn-primary-color: #fff;
+    --btn-primary-border: none;
+    --btn-primary-shadow: 0 2px 10px rgba(0, 242, 254, 0.2);
+    --btn-hover-transform: scale(1.03);
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.2);
+    --panel-border: 1px solid var(--border-color);
+    --msg-user-bg: rgba(99, 102, 241, 0.15);
+    --msg-user-border: 1px solid rgba(99, 102, 241, 0.25);
+    --msg-bot-bg: var(--bg-card);
+    --msg-bot-border: 1px solid var(--border-color);
+}
+
+/* Glassmorphism theme (Translucent, rounded, glow) */
 body.theme-glass, .theme-glass body, html.theme-glass {
     --bg-app: radial-gradient(circle at 50% 50%, #170d3a 0%, #06020f 100%);
     --bg-sidebar: rgba(15, 17, 24, 0.45);
@@ -46,6 +68,14 @@ body.theme-glass, .theme-glass body, html.theme-glass {
     --accent-purple: #ec4899;
     --accent-grad: linear-gradient(135deg, #a855f7, #ec4899);
     --shadow-glow: 0 8px 32px 0 rgba(168, 85, 247, 0.15);
+    
+    --border-radius-card: 24px;
+    --border-radius-btn: 9999px; /* Pill buttons */
+    --border-radius-bubble: 20px;
+    --border-radius-input: 20px;
+    --btn-primary-bg: linear-gradient(135deg, #a855f7, #ec4899);
+    --btn-primary-shadow: 0 8px 20px rgba(168, 85, 247, 0.25);
+    --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 15px rgba(168, 85, 247, 0.1);
 }
 
 body.theme-glass .sidebar,
@@ -53,10 +83,11 @@ body.theme-glass .panel,
 body.theme-glass .top-nav-bar,
 body.theme-glass .message-bubble,
 body.theme-glass .docs-modal-card {
-    backdrop-filter: blur(12px) saturate(180%);
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
 }
 
+/* Deep Ocean theme (High-tech navy, sharp border) */
 body.theme-ocean, .theme-ocean body, html.theme-ocean {
     --bg-app: #030c1b;
     --bg-sidebar: #051329;
@@ -71,8 +102,16 @@ body.theme-ocean, .theme-ocean body, html.theme-ocean {
     --accent-purple: #0ea5e9;
     --accent-grad: linear-gradient(135deg, #06b6d4, #0ea5e9, #3b82f6);
     --shadow-glow: 0 0 15px rgba(6, 182, 212, 0.25);
+    
+    --border-radius-card: 12px;
+    --border-radius-btn: 6px;
+    --border-radius-bubble: 12px;
+    --border-radius-input: 8px;
+    --btn-primary-bg: linear-gradient(135deg, #06b6d4, #3b82f6);
+    --btn-primary-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
 }
 
+/* Emerald Mint theme (Clinical dark green) */
 body.theme-emerald, .theme-emerald body, html.theme-emerald {
     --bg-app: #040d0a;
     --bg-sidebar: #071612;
@@ -87,22 +126,127 @@ body.theme-emerald, .theme-emerald body, html.theme-emerald {
     --accent-purple: #10b981;
     --accent-grad: linear-gradient(135deg, #059669, #10b981, #34d399);
     --shadow-glow: 0 0 15px rgba(16, 185, 129, 0.25);
+    
+    --border-radius-card: 10px;
+    --border-radius-btn: 8px;
+    --border-radius-bubble: 10px;
+    --border-radius-input: 8px;
+    --btn-primary-bg: linear-gradient(135deg, #059669, #10b981);
+    --btn-primary-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
+/* Neo-Brutalist Theme (Retro flat design, thick borders, sharp corners, hard offset shadows) */
+body.theme-brutalist, .theme-brutalist body, html.theme-brutalist {
+    --bg-app: #121214;
+    --bg-sidebar: #18181c;
+    --bg-card: #202024;
+    --bg-card-hover: #2a2a30;
+    --border-color: #ffffff;
+    --border-glow: #eab308;
+    --text-primary: #ffffff;
+    --text-secondary: #e2e8f0;
+    --text-muted: #a0aec0;
+    --accent-blue: #eab308; /* Yellow */
+    --accent-purple: #f43f5e; /* Rose */
+    --accent-grad: linear-gradient(135deg, #eab308, #f43f5e);
+    --shadow-glow: 4px 4px 0px #ffffff;
+    
+    --border-radius-card: 0px !important; /* Fully sharp corners */
+    --border-radius-btn: 0px !important;
+    --border-radius-bubble: 0px !important;
+    --border-radius-input: 0px !important;
+    --border-width-global: 2.5px;
+    
+    --btn-primary-bg: #eab308;
+    --btn-primary-color: #000000;
+    --btn-primary-border: 2.5px solid #ffffff;
+    --btn-primary-shadow: 3px 3px 0px #ffffff;
+    --btn-hover-transform: translate(-2px, -2px);
+    --shadow-card: 5px 5px 0px #ffffff;
+    --panel-border: 2.5px solid #ffffff;
+    --msg-user-bg: rgba(244, 63, 94, 0.15);
+    --msg-user-border: 2.5px solid #ffffff;
+    --msg-bot-bg: #202024;
+    --msg-bot-border: 2.5px solid #ffffff;
+}
+
+/* Apply Brutalist border and shadow overrides */
+body.theme-brutalist .top-nav-bar,
+body.theme-brutalist .sidebar,
+body.theme-brutalist .panel,
+body.theme-brutalist .message-bubble,
+body.theme-brutalist .input-wrapper,
+body.theme-brutalist .user-profile,
+body.theme-brutalist .docs-modal-card,
+body.theme-brutalist .login-card,
+body.theme-brutalist .form-group input,
+body.theme-brutalist .form-group select,
+body.theme-brutalist .option-btn,
+body.theme-brutalist .toast-notification,
+body.theme-brutalist .btn-top-docs,
+body.theme-brutalist .btn-top-logout,
+body.theme-brutalist .btn-delete-session {
+    border: var(--border-width-global) solid #ffffff !important;
+    border-radius: var(--border-radius-card) !important;
+    box-shadow: var(--shadow-card) !important;
+}
+
+body.theme-brutalist .btn-primary,
+body.theme-brutalist button.btn:not(.btn-delete-session):not(.btn-user-action):not(.btn-close-modal):not(.btn-remove-preview) {
+    background: var(--btn-primary-bg) !important;
+    color: var(--btn-primary-color) !important;
+    border: var(--btn-primary-border) !important;
+    box-shadow: var(--btn-primary-shadow) !important;
+    border-radius: var(--border-radius-btn) !important;
+    transform: none;
+    transition: all 0.15s ease;
+}
+
+body.theme-brutalist .btn-primary:hover,
+body.theme-brutalist button.btn:not(.btn-delete-session):not(.btn-user-action):not(.btn-close-modal):not(.btn-remove-preview):hover {
+    transform: var(--btn-hover-transform) !important;
+    box-shadow: 5px 5px 0px #ffffff !important;
+}
+
+body.theme-brutalist .btn-primary:active,
+body.theme-brutalist button.btn:not(.btn-delete-session):not(.btn-user-action):not(.btn-close-modal):not(.btn-remove-preview):active {
+    transform: translate(2px, 2px) !important;
+    box-shadow: 1px 1px 0px #ffffff !important;
+}
+
+body.theme-brutalist .message-bubble strong {
+    color: #eab308 !important;
+}
+
+/* Light Clinic theme (Minimalist light, soft shadows, borderless card focus) */
 body.theme-light, .theme-light body, html.theme-light {
     --bg-app: #f1f5f9;
     --bg-sidebar: #ffffff;
     --bg-card: #ffffff;
     --bg-card-hover: #f8fafc;
-    --border-color: rgba(15, 23, 42, 0.08);
-    --border-glow: rgba(37, 99, 235, 0.15);
+    --border-color: rgba(15, 23, 42, 0.07);
+    --border-glow: rgba(37, 99, 235, 0.12);
     --text-primary: #0f172a;
     --text-secondary: #475569;
     --text-muted: #94a3b8;
     --accent-blue: #2563eb;
     --accent-purple: #4f46e5;
     --accent-grad: linear-gradient(135deg, #2563eb, #4facfe, #4f46e5);
-    --shadow-glow: 0 4px 20px rgba(37, 99, 235, 0.08);
+    --shadow-glow: 0 4px 12px rgba(37, 99, 235, 0.05);
+    
+    --border-radius-card: 12px;
+    --border-radius-btn: 8px;
+    --border-radius-bubble: 12px;
+    --border-radius-input: 8px;
+    --btn-primary-bg: #2563eb;
+    --btn-primary-color: #ffffff;
+    --btn-primary-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.03);
+    --panel-border: 1px solid rgba(15, 23, 42, 0.06);
+    --msg-user-bg: rgba(37, 99, 235, 0.08);
+    --msg-user-border: 1px solid rgba(37, 99, 235, 0.15);
+    --msg-bot-bg: #ffffff;
+    --msg-bot-border: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 /* Light mode specific element overrides to ensure perfect contrast and aesthetics */
@@ -309,17 +453,17 @@ body {
 /* Sidebar Panels */
 .panel {
     background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border: var(--panel-border);
+    border-radius: var(--border-radius-card);
     padding: 16px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .panel:hover {
     border-color: rgba(0, 242, 254, 0.25);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), var(--shadow-glow);
+    box-shadow: var(--shadow-card), var(--shadow-glow);
 }
 
 .panel h3 {
@@ -533,13 +677,24 @@ body {
     justify-content: center;
     gap: 8px;
     padding: 12px 16px;
-    border-radius: 12px;
+    border-radius: var(--border-radius-btn);
     font-family: var(--font-heading);
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
+}
+
+.btn-primary {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-color);
+    border: var(--btn-primary-border);
+    box-shadow: var(--btn-primary-shadow);
+}
+
+.btn-primary:hover {
+    transform: var(--btn-hover-transform);
 }
 
 .btn-block {
@@ -756,22 +911,22 @@ body {
 
 .message-bubble {
     padding: 12px 18px;
-    border-radius: 16px;
+    border-radius: var(--border-radius-bubble);
     font-size: 14px;
     line-height: 1.5;
     word-break: break-word;
 }
 
 .message-user .message-bubble {
-    background: rgba(99, 102, 241, 0.15);
-    border: 1px solid rgba(99, 102, 241, 0.25);
+    background: var(--msg-user-bg);
+    border: var(--msg-user-border);
     color: var(--text-primary);
     border-top-right-radius: 4px;
 }
 
 .message-bot .message-bubble {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: var(--msg-bot-bg);
+    border: var(--msg-bot-border);
     color: var(--text-primary);
     border-top-left-radius: 4px;
 }
@@ -949,7 +1104,7 @@ body {
 .input-wrapper {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border-radius: var(--border-radius-input);
     padding: 8px 16px;
     display: flex;
     align-items: center;
@@ -1686,7 +1841,7 @@ body {
     gap: 14px;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-color);
-    border-radius: 10px;
+    border-radius: var(--border-radius-card);
     padding: 14px 18px;
     text-align: left;
     color: var(--text-secondary);
