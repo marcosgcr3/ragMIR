@@ -1097,6 +1097,36 @@ body {
     color: #fff;
 }
 
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    padding-right: 40px !important;
+}
+
+.btn-toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    transition: color 0.2s ease;
+}
+
+.btn-toggle-password:hover {
+    color: var(--accent-blue);
+}
+
 .login-error {
     color: var(--system-red);
     font-size: 12px;

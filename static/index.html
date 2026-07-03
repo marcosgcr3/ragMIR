@@ -216,7 +216,12 @@
                 </div>
                 <div class="form-group">
                     <label for="login-password">Contraseña</label>
-                    <input type="password" id="login-password" placeholder="Tu contraseña" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="login-password" placeholder="Tu contraseña" required>
+                        <button type="button" id="btn-toggle-password" class="btn-toggle-password" onclick="togglePasswordVisibility()" title="Mostrar/ocultar contraseña">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="login-error" id="login-error" style="display: none;">Contraseña incorrecta</div>
                 <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
@@ -238,6 +243,22 @@
             Diagnóstico
         </a>
     </div>
+    <script>
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('login-password');
+        const toggleBtn = document.getElementById('btn-toggle-password');
+        const eyeIcon = toggleBtn.querySelector('i');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    }
+    </script>
 </body>
 <script src="/static/app.js?v=4"></script>
 <script src="/static/mobile.js"></script>

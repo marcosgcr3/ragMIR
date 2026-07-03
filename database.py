@@ -177,15 +177,22 @@ def init_db(db_path: Path) -> None:
                 cur = conn.cursor()
                 cur.execute("SELECT id FROM users WHERE username = ?", (username,))
                 row = cur.fetchone()
+                pw_hash, salt = hash_password(cto_password)
                 if not row:
-                    pw_hash, salt = hash_password(cto_password)
                     conn.execute(
                         "INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)",
                         (username, pw_hash, salt)
                     )
                     print(f"[!] Usuario inicial creado: {username}")
+                else:
+                    # Update password in case CTO_PASSWORD changed in environment variables
+                    conn.execute(
+                        "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?",
+                        (pw_hash, salt, row["id"])
+                    )
+                    print(f"[!] Contraseña de usuario inicial actualizada: {username}")
     else:
-        print("[!] ADVERTENCIA: CTO_PASSWORD no está definida en el entorno. No se crearán los usuarios iniciales automáticos.")
+        print("[!] ADVERTENCIA: CTO_PASSWORD no está definida en el entorno. No se crearán ni actualizarán los usuarios iniciales automáticos.")
         
         # Seed official MIR questions if question_pool is empty
         cur = conn.cursor()
